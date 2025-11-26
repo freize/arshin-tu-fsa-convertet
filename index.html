@@ -245,6 +245,17 @@
                     </button>
                 </form>
 
+                <!-- Добавлены кнопки Импорта/Экспорта СНИЛС -->
+                <div class="flex gap-2">
+                    <button id="exportSnilsButton" type="button" class="w-1/2 bg-gray-300 text-gray-800 p-2 rounded-lg font-medium hover:bg-gray-400 transition duration-150">
+                        Экспорт JSON
+                    </button>
+                    <input type="file" id="importSnilsFile" accept=".json" class="hidden">
+                    <button id="importSnilsButton" type="button" class="w-1/2 bg-gray-300 text-gray-800 p-2 rounded-lg font-medium hover:bg-gray-400 transition duration-150">
+                        Импорт JSON
+                    </button>
+                </div>
+                
                 <div id="mappingListContainer" class="max-h-60 overflow-y-auto border border-gray-300 rounded-lg shadow-inner">
                     <!-- Mappings will be rendered here -->
                     <p class="p-4 text-gray-500 text-sm italic" id="emptyMappingMessage">
@@ -274,6 +285,17 @@
                         Добавить/Обновить
                     </button>
                 </form>
+                
+                <!-- Добавлены кнопки Импорта/Экспорта МПИ -->
+                <div class="flex gap-2">
+                    <button id="exportMpiButton" type="button" class="w-1/2 bg-gray-300 text-gray-800 p-2 rounded-lg font-medium hover:bg-gray-400 transition duration-150">
+                        Экспорт JSON
+                    </button>
+                    <input type="file" id="importMpiFile" accept=".json" class="hidden">
+                    <button id="importMpiButton" type="button" class="w-1/2 bg-gray-300 text-gray-800 p-2 rounded-lg font-medium hover:bg-gray-400 transition duration-150">
+                        Импорт JSON
+                    </button>
+                </div>
 
                 <div id="mpiMappingListContainer" class="max-h-60 overflow-y-auto border border-gray-300 rounded-lg shadow-inner">
                     <!-- Mappings will be rendered here -->
@@ -353,6 +375,11 @@
         const missingSnilsForm = document.getElementById('missingSnilsForm');
         const saveMissingSnilsButton = document.getElementById('saveMissingSnilsButton');
 
+        // Элементы для JSON I/O (СНИЛС)
+        const exportSnilsButton = document.getElementById('exportSnilsButton');
+        const importSnilsButton = document.getElementById('importSnilsButton');
+        const importSnilsFile = document.getElementById('importSnilsFile');
+
         // Элементы для МПИ
         const mpiMappingForm = document.getElementById('mpiMappingForm');
         const instrumentTypeInput = document.getElementById('instrumentTypeInput'); // Используется для ввода ГРСИ
@@ -362,6 +389,11 @@
         const missingMpiContainer = document.getElementById('missingMpiContainer');
         const missingMpiForm = document.getElementById('missingMpiForm');
         const saveMissingMpiButton = document.getElementById('saveMissingMpiButton');
+        
+        // Элементы для JSON I/O (МПИ)
+        const exportMpiButton = document.getElementById('exportMpiButton');
+        const importMpiButton = document.getElementById('importMpiButton');
+        const importMpiFile = document.getElementById('importMpiFile');
 
 
         // --- УТИЛИТЫ И ОБЩИЕ ФУНКЦИИ ---
@@ -578,6 +610,22 @@
             }
             return fields;
         }
+        
+        // General JSON download utility
+        function downloadJSON(data, filename) {
+            const jsonStr = JSON.stringify(data, null, 2);
+            const blob = new Blob([jsonStr], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename; 
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            logMessage(`JSON-файл "${filename}" создан и загружен.`);
+        }
+
 
         // --- ЛОГИКА СОПОСТАВЛЕНИЙ ---
 
@@ -770,6 +818,116 @@
                 saveAndRenderMpiMappings();
             }
         }
+        
+        // --- ЛОГИКА ИМПОРТА/ЭКСПОРТА JSON ---
+        
+        // 1. Export SNILS Map
+        function exportSnilsMap() {
+            if (Object.keys(authorSnilsMap).length === 0) {
+                logError('Нечего экспортировать: Сопоставления СНИЛС пусты.');
+                return;
+            }
+            const filename = `snils_map_export_${new Date().toISOString().slice(0, 10)}.json`;
+            downloadJSON(authorSnilsMap, filename);
+        }
+
+        // 2. Import SNILS Map
+        function importSnilsMapHandler(file) {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                try {
+                    const importedMap = JSON.parse(e.target.result);
+                    if (typeof importedMap !== 'object' || Array.isArray(importedMap)) {
+                        logError('Ошибка импорта СНИЛС: Файл имеет неверный формат (ожидается объект {author: snils}).');
+                        return;
+                    }
+                    
+                    let newCount = 0;
+                    let totalCount = 0;
+                    for (const key in importedMap) {
+                        if (importedMap.hasOwnProperty(key)) {
+                            const snils = String(importedMap[key]).trim();
+                            // Basic validation for SNILS
+                            if (snils.match(/^\d{11}$/)) {
+                                if (authorSnilsMap[key] !== snils) {
+                                     newCount++;
+                                }
+                                authorSnilsMap[key] = snils;
+                                totalCount++;
+                            } else {
+                                logError(`Импорт СНИЛС: Пропущено невалидное значение для ключа "${key}".`);
+                            }
+                        }
+                    }
+                    if (totalCount > 0) {
+                        saveAndRenderMappings();
+                        logMessage(`Успешно импортировано ${totalCount} записей СНИЛС. Новых/обновленных: ${newCount}.`);
+                    } else {
+                         logError('Ошибка импорта СНИЛС: В файле не найдено валидных записей.');
+                    }
+
+                } catch (error) {
+                    logError(`Ошибка разбора JSON при импорте СНИЛС: ${error.message}`);
+                }
+            };
+            reader.onerror = () => logError('Ошибка чтения файла при импорте СНИЛС.');
+            reader.readAsText(file);
+        }
+        
+        // 3. Export MPI Map
+        function exportMpiMap() {
+            if (Object.keys(mpiMonthsMap).length === 0) {
+                logError('Нечего экспортировать: Сопоставления МПИ пусты.');
+                return;
+            }
+            const filename = `mpi_map_export_${new Date().toISOString().slice(0, 10)}.json`;
+            downloadJSON(mpiMonthsMap, filename);
+        }
+
+        // 4. Import MPI Map
+        function importMpiMapHandler(file) {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                try {
+                    const importedMap = JSON.parse(e.target.result);
+                    if (typeof importedMap !== 'object' || Array.isArray(importedMap)) {
+                        logError('Ошибка импорта МПИ: Файл имеет неверный формат (ожидается объект {grsi_number: mpi_months}).');
+                        return;
+                    }
+
+                    let newCount = 0;
+                    let totalCount = 0;
+                    for (const key in importedMap) {
+                        if (importedMap.hasOwnProperty(key)) {
+                            const mpi = parseInt(importedMap[key], 10);
+                            // Basic validation for MPI (must be positive integer)
+                            if (!isNaN(mpi) && mpi > 0) {
+                                if (mpiMonthsMap[key] !== mpi) {
+                                    newCount++;
+                                }
+                                mpiMonthsMap[key] = mpi;
+                                totalCount++;
+                            } else {
+                                logError(`Импорт МПИ: Пропущено невалидное значение МПИ для ГРСИ №"${key}".`);
+                            }
+                        }
+                    }
+                    
+                    if (totalCount > 0) {
+                        saveAndRenderMpiMappings();
+                        logMessage(`Успешно импортировано ${totalCount} записей МПИ. Новых/обновленных: ${newCount}.`);
+                    } else {
+                         logError('Ошибка импорта МПИ: В файле не найдено валидных записей.');
+                    }
+                    
+                } catch (error) {
+                    logError(`Ошибка разбора JSON при импорте МПИ: ${error.message}`);
+                }
+            };
+            reader.onerror = () => logError('Ошибка чтения файла при импорте МПИ.');
+            reader.readAsText(file);
+        }
+
         
         // --- ЛОГИКА ПРОВЕРКИ НЕДОСТАЮЩИХ ДАННЫХ ---
 
@@ -1012,7 +1170,7 @@
                     const suitabilityText = fields[COL_INDEX.Suitability];
 
                     if (!documentNum || documentNum.trim() === '') {
-                        logError(`Строка ${lineNumber}: Пропущена, отсутствует номер документа (колонка ${COL_INDEX.Document}).`);
+                        logError(`Строка ${lineNumber} (${documentNum}): Пропущена, отсутствует номер документа (колонка ${COL_INDEX.Document}).`);
                         continue;
                     }
                     
@@ -1231,9 +1389,29 @@
             e.stopPropagation();
         }
 
-        // --- Прикрепление обработчиков форм ---
+        // --- Прикрепление обработчиков форм и JSON I/O ---
         snilsMappingForm.addEventListener('submit', handleMappingForm);
         mpiMappingForm.addEventListener('submit', handleMpiMappingForm);
+
+        // JSON I/O Handlers
+        exportSnilsButton.addEventListener('click', exportSnilsMap);
+        importSnilsButton.addEventListener('click', () => importSnilsFile.click());
+        importSnilsFile.addEventListener('change', (e) => {
+            if (e.target.files.length > 0) {
+                importSnilsMapHandler(e.target.files[0]);
+            }
+            e.target.value = null; 
+        });
+
+        exportMpiButton.addEventListener('click', exportMpiMap);
+        importMpiButton.addEventListener('click', () => importMpiFile.click());
+        importMpiFile.addEventListener('change', (e) => {
+            if (e.target.files.length > 0) {
+                importMpiMapHandler(e.target.files[0]);
+            }
+            e.target.value = null; 
+        });
+
 
         // Инициализация
         loadMappings(); // Загрузка сохраненных сопоставлений СНИЛС и МПИ
