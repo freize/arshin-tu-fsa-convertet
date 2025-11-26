@@ -6,56 +6,39 @@
     <title>Конвертер данных для ФГИС ФСА</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Firebase Imports -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, onSnapshot, addDoc, deleteDoc, doc, setLogLevel, writeBatch, getDocs, query } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        
+        // Expose Firebase objects globally for use in the main script block
+        window.firebaseImports = {
+            initializeApp, getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged,
+            getFirestore, collection, onSnapshot, addDoc, deleteDoc, doc, setLogLevel, writeBatch, getDocs, query
+        };
+    </script>
     <style>
-        /* Custom styles: ВОЗВРАТ ПРЕДЫДУЩЕГО ФОНА */
         body {
             font-family: 'Inter', sans-serif;
-            background-color: #f0f4f8; /* Light blue-gray base */
+            background-color: #f0f4f8; 
             min-height: 100vh;
-            /* Subtle metrology/grid background pattern for precision feel */
             background-image: linear-gradient(0deg, transparent 14px, rgba(160, 174, 192, 0.15) 15px),
                               linear-gradient(90deg, transparent 14px, rgba(160, 174, 192, 0.15) 15px);
-            background-size: 15px 15px; /* Size of the grid cells */
+            background-size: 15px 15px; 
             background-attachment: fixed;
         }
+        .main-card { background-color: #ffffff; }
+        .drag-area { border: 3px dashed #94a3b8; transition: all 0.3s ease; }
+        .drag-area.active { border-color: #0ea5e9; background-color: #f0f9ff; box-shadow: 0 0 0 4px rgba(14, 165, 233, 0.2); }
+        details[open] summary svg { transform: rotate(180deg); }
         
-        /* Главная карточка */
-        .main-card {
-            background-color: #ffffff;
-        }
-
-        .drag-area {
-            border: 3px dashed #94a3b8; /* slate-400 */
-            transition: all 0.3s ease;
-        }
-        .drag-area.active {
-            border-color: #0ea5e9; /* sky-500 */
-            background-color: #f0f9ff; /* sky-50 */
-            box-shadow: 0 0 0 4px rgba(14, 165, 233, 0.2); /* ring effect for focus */
-        }
-        
-        details[open] summary svg {
-            transform: rotate(180deg);
-        }
-        
-        /* Анимация полос прогресса */
-        @keyframes progress-stripes {
-            0% { transform: translateX(-100%); }
-            100% { transform: translateX(100%); }
-        }
-
+        @keyframes progress-stripes { 0% { transform: translateX(-100%); } 100% { transform: translateX(100%); } }
         .animate-progress-stripes {
-            width: 200%; 
-            animation: progress-stripes 2s linear infinite;
+            width: 200%; animation: progress-stripes 2s linear infinite;
             background: linear-gradient(
-                135deg,
-                rgba(255, 255, 255, 0.15) 25%,
-                transparent 25%,
-                transparent 50%,
-                rgba(255, 255, 255, 0.15) 50%,
-                rgba(255, 255, 255, 0.15) 75%,
-                transparent 75%,
-                transparent
+                135deg, rgba(255, 255, 255, 0.15) 25%, transparent 25%, transparent 50%,
+                rgba(255, 255, 255, 0.15) 50%, rgba(255, 255, 255, 0.15) 75%, transparent 75%, transparent
             );
             background-size: 1rem 1rem;
             will-change: transform;
@@ -65,13 +48,8 @@
         tailwind.config = {
             theme: {
                 extend: {
-                    fontFamily: {
-                        sans: ['Inter', 'sans-serif'],
-                    },
-                    colors: {
-                        'accent-sky': '#0ea5e9', // sky-500 for primary
-                        'accent-emerald': '#10b981', // emerald-500 for success
-                    }
+                    fontFamily: { sans: ['Inter', 'sans-serif'], },
+                    colors: { 'accent-sky': '#0ea5e9', 'accent-emerald': '#10b981', }
                 }
             }
         }
@@ -79,7 +57,7 @@
 </head>
 <body class="p-4 md:p-12">
 
-    <!-- Главная карточка - чистая, белая, с акцентной рамкой -->
+    <!-- Главная карточка -->
     <div class="max-w-4xl mx-auto main-card p-6 md:p-10 rounded-xl shadow-xl border-t-4 border-accent-sky">
         <header class="mb-8 border-b border-gray-200 pb-4">
             <h1 class="text-3xl font-bold text-gray-800 mb-1">
@@ -88,47 +66,16 @@
             <p class="text-gray-500 text-base">
                 Преобразование выгрузки "АРШИН" в формат для загрузки в ФГИС ФСА.
             </p>
+            <p id="userIdDisplay" class="text-xs text-gray-400 mt-2">Статус авторизации: Загрузка...</p>
         </header>
 
-        <!-- Instruction Guide Block - Чистый, синий акцент (sky) -->
-        <details class="mb-8 p-4 bg-sky-50 border border-sky-200 rounded-lg">
-            <summary class="flex justify-between items-center cursor-pointer font-semibold text-sky-800 focus:outline-none">
-                <span>
-                    <svg class="w-5 h-5 inline-block mr-2 text-sky-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                    Инструкция по подготовке файла (ВАЖНО)
-                </span>
-                <svg class="w-4 h-4 text-sky-600 transition-transform duration-200" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
-            </summary>
-            
-            <div class="mt-3 text-sm text-gray-700 space-y-3">
-                <p class="font-bold text-sky-900">1. Проверка структуры файла:</p>
-                <p>Ваш файл должен быть экспортирован из реестра таким образом, чтобы заголовок таблицы начинался с <span class="font-mono bg-sky-100 p-1 rounded">3-й строки</span> (первые две строки – это метаданные, которые конвертер автоматически пропустит).</p>
-                
-                <p class="font-bold text-sky-900">2. Обязательные колонки (Индекс = номер колонки, начиная с 0):</p>
-                <ul class="list-disc list-inside ml-4 space-y-1 bg-white p-3 rounded border">
-                    <li><span class="font-mono">Author</span> (Индекс **1**): ФИО автора записи.</li>
-                    <li><span class="font-mono">Type</span> (Индекс **3**): Наименование типа СИ.</li>
-                    <li><span class="font-mono">Date</span> (Индекс **5**): Дата поверки.</li>
-                    <li><span class="font-mono">Suitability</span> (Индекс **9**): Пригодность ("Да" или "Нет").</li>
-                    <li><span class="font-mono">Document</span> (Индекс **10**): Номер документа (протокола) поверки.</li>
-                </ul>
-                
-                <p class="font-bold text-sky-900">3. Сохранение в формат CSV:</p>
-                <p>В Excel выберите "Сохранить как" и выберите тип файла <span class="font-medium">CSV (разделители-запятые)</span> или <span class="font-medium">CSV (разделители-точки с запятой)</span>. Конвертер автоматически определит разделитель.</p>
-                
-                <p class="text-xs italic mt-4 text-sky-700">
-                    <span class="font-semibold">Примечание по датам:</span> Даты в CSV (Индекс 5) должны быть в одном из форматов: ДД.ММ.ГГГГ, ДД-ММ-ГГГГ или ГГГГ-ММ-ДД.
-                </p>
-            </div>
-        </details>
-        
-        <!-- Input and Status Section - Теперь блоки расположены вертикально -->
+        <!-- Input and Status Section -->
         <div class="space-y-6">
             
-            <!-- БЛОК 1: Загрузка файла (Drag-n-Drop) -->
-            <div>
+            <!-- БЛОК 1: Загрузка файла -->
+            <div id="fileUploadSection">
                 <h2 class="text-xl font-semibold text-gray-700 mb-3 border-b pb-1">
-                    Загрузка исходного CSV
+                    Шаг 1: Загрузка исходного CSV
                 </h2>
                 <div id="drop-area" class="drag-area p-8 rounded-lg text-center cursor-pointer transition-all hover:ring-2 hover:ring-offset-2 hover:ring-sky-300">
                     <input type="file" id="fileInput" accept=".csv" class="hidden">
@@ -142,16 +89,74 @@
                 </div>
             </div>
 
-            <!-- БЛОК 2: Статус и Скачивание -->
+            <!-- БЛОК 2: SNILS Management (Перемещен) -->
+            <div id="snilsManagement" class="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+                <h2 class="text-xl font-semibold text-gray-700 mb-3 border-b pb-1 flex items-center">
+                    <svg class="w-6 h-6 mr-2 text-yellow-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20v-2h2m-4-6a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 01-1.498-3.155L6 14v-2.5a4 4 0 014-4h.001M12 10a4 4 0 00-4-4H8a4 4 0 00-4 4v2.5L3.498 17A7 7 0 0011 20h2a7 7 0 007-7.498l-1.498-3.155z" /></svg>
+                    Шаг 2: Управление СНИЛС (Ваша база сопоставлений)
+                </h2>
+                <!-- Форма ручного добавления -->
+                <form id="addMappingForm" class="grid grid-cols-1 md:grid-cols-3 gap-3 mb-4 p-3 bg-white rounded-lg border">
+                    <input type="text" id="authorNameInput" placeholder="ФИО Автора (как в CSV)" required
+                           class="col-span-1 md:col-span-1 p-2 border border-gray-300 rounded-md focus:ring-sky-500 focus:border-sky-500">
+                    <input type="text" id="snilsInput" placeholder="СНИЛС (11 цифр)" required pattern="\d{11}" maxlength="11"
+                           class="col-span-1 md:col-span-1 p-2 border border-gray-300 rounded-md focus:ring-sky-500 focus:border-sky-500">
+                    <button type="submit" class="col-span-1 bg-sky-500 text-white font-semibold py-2 rounded-md hover:bg-sky-600 transition-colors">
+                        Сохранить сопоставление
+                    </button>
+                </form>
+
+                <!-- Кнопки Импорта/Экспорта -->
+                <div class="mt-4 pt-4 border-t border-yellow-200 flex flex-col sm:flex-row gap-3">
+                    <button id="exportMappingsButton" class="flex-1 bg-sky-600 text-white font-semibold py-2 rounded-md hover:bg-sky-700 transition-colors disabled:opacity-50" disabled>
+                        💾 Выгрузить сопоставления (.json)
+                    </button>
+                    <input type="file" id="importMappingsInput" accept=".json" class="hidden">
+                    <button id="importMappingsButton" class="flex-1 bg-gray-300 text-gray-800 font-semibold py-2 rounded-md hover:bg-gray-400 transition-colors">
+                        📥 Загрузить сопоставления (.json)
+                    </button>
+                </div>
+
+                <!-- Список текущих сопоставлений -->
+                <details class="mt-4">
+                    <summary class="font-medium text-gray-600 mb-2 cursor-pointer">
+                        Показать текущие сопоставления
+                        <svg class="w-4 h-4 inline ml-1 transition-transform duration-200" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
+                    </summary>
+                    <ul id="mappingsList" class="divide-y divide-gray-100 bg-white p-3 rounded-lg border border-gray-200 mt-2">
+                        <p class="text-sm text-gray-500 italic">Загрузка данных...</p>
+                    </ul>
+                </details>
+            </div>
+        
+            <!-- БЛОК 3: Предварительный просмотр недостающих СНИЛС -->
+            <div id="missingMappingsContainer" class="hidden p-4 bg-red-50 border border-red-200 rounded-lg">
+                <h2 class="text-xl font-semibold text-red-700 mb-3 border-b pb-2 flex items-center">
+                    <svg class="w-6 h-6 mr-2 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.3 16c-.77 1.333.192 3 1.732 3z" /></svg>
+                    Шаг 3: Необходимо добавить СНИЛС для: <span id="missingCount" class="font-bold">0</span>&nbsp;авторов
+                </h2>
+                <p class="text-sm text-red-600 mb-4">
+                    Введите СНИЛС для каждого автора. Данные сохраняются автоматически.
+                </p>
+
+                <div id="missingAuthorsList" class="space-y-3">
+                    <!-- Здесь будут карточки с недостающими ФИО и полями ввода -->
+                </div>
+
+                <button id="forceConvertButton"
+                        class="w-full mt-6 bg-yellow-600 text-white font-bold py-3 rounded-lg shadow-md hover:bg-yellow-700 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed">
+                    Продолжить конвертацию (даже с недостающими СНИЛС)
+                </button>
+            </div>
+            
+            <!-- БЛОК 4: Статус и Скачивание -->
             <div class="p-4 bg-gray-50 rounded-lg shadow-inner border border-gray-200">
                 <h2 class="text-xl font-semibold text-gray-700 mb-3 border-b pb-1">
-                    Статус и результат
+                    Шаг 4: Статус и результат
                 </h2>
-                
                 <div id="statusMessage" class="text-gray-600 text-lg font-semibold mb-4">
                     Ожидание загрузки файла...
                 </div>
-                
                 <!-- Processing Animation -->
                 <div id="processingIndicator" class="mt-4 hidden">
                     <div class="h-2.5 bg-sky-200 rounded-full overflow-hidden">
@@ -159,7 +164,6 @@
                     </div>
                     <p class="text-xs text-accent-sky mt-1 font-medium animate-pulse">Обработка данных...</p>
                 </div>
-
                 <!-- Кнопка с accent-emerald -->
                 <button id="downloadButton"
                         class="w-full mt-4 bg-emerald-500 text-white font-bold py-3 px-4 rounded-lg shadow-md hover:bg-emerald-600 transition-colors duration-200 opacity-50 cursor-not-allowed disabled:shadow-none"
@@ -174,15 +178,13 @@
         <details class="mt-8 p-4 bg-gray-100 border border-gray-300 rounded-lg" id="debugLogSpoiler">
             <summary class="flex justify-between items-center cursor-pointer font-semibold text-gray-700 focus:outline-none">
                 <span>
-                    <!-- Новая иконка: Документ/Список -->
                     <svg class="w-5 h-5 inline-block mr-2 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2m-9 0V3a1 1 0 011-1h4a1 1 0 011 1v2M9 5h6M9 12h6m-6 4h6" />
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2m-9 0V3a1 1 0 011-1h4a1 1 0 011 1v2M9 5h6m-6 4h6m-6 4h6m-6 4h6" />
                     </svg>
-                    Лог конвертации / Отладка (Открыть для просмотра деталей процесса)
+                    Лог конвертации / Отладка
                 </span>
                 <svg class="w-4 h-4 text-gray-500 transition-transform duration-200" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
             </summary>
-            <!-- Контейнер лога: p-2 для минимального, но достаточного отступа -->
             <div id="logDetails" class="mt-2 text-sm text-gray-700 overflow-auto h-40 bg-white p-2 rounded-lg border border-gray-200 shadow-inner">
                 <!-- Log entries will appear here as structured HTML -->
             </div>
@@ -196,23 +198,43 @@
         </footer>
     </div>
 
-    <script>
+    <script type="module">
+        // Global variables from Canvas environment
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        const firebaseConfig = JSON.parse(typeof __firebase_config !== 'undefined' ? __firebase_config : '{}');
+        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+        
         // --- КОНФИГУРАЦИЯ ---
-        const SNILS_PLACEHOLDER = '11489876506';
-        // Количество строк метаданных, которые нужно пропустить до заголовка
-        const HEADER_SKIP_LINES = 2; 
-        // Минимальное время отображения анимации обработки (в мс)
+        // ИСПРАВЛЕНО: Установлено 3 для пропуска двух строк метаданных + строки заголовков
+        const HEADER_SKIP_LINES = 3; 
         const MIN_PROCESSING_TIME = 1500; 
 
+        // Индексы столбцов в CSV-файле (начиная с 0)
         const COL_INDEX = {
-            'Author': 1,
-            'Type': 3,
-            'Date': 5,
-            'Suitability': 9,
-            'Document': 10
+            'Author': 1, // Автор записи
+            'Type': 3, // Тип СИ
+            'Date': 5, // Дата поверки
+            'Suitability': 9, // Пригодность
+            'Document': 10 // Номер документа
         };
 
-        // --- ЭЛЕМЕНТЫ DOM ---
+        // --- FIREBASE STATE ---
+        let db;
+        let auth;
+        let userId = null;
+        let isAuthReady = false;
+        // Map<NormalizedFullName (key), SNILS (value)>
+        let snilsMap = new Map(); 
+        // Array of full document snapshots for export/import
+        let currentMappingsData = []; 
+
+        // --- CONVERSION STATE ---
+        let currentFileContent = null;
+        let currentFilename = null;
+        let missingAuthorsFromCurrentFile = new Set(); // Set<FullName>
+        let isAnalysisPending = false; 
+
+        // --- DOM ЭЛЕМЕНТЫ ---
         const fileInput = document.getElementById('fileInput');
         const dropArea = document.getElementById('drop-area');
         const fileNameDisplay = document.getElementById('fileNameDisplay');
@@ -222,33 +244,56 @@
         const processingIndicator = document.getElementById('processingIndicator');
         const debugLogSpoiler = document.getElementById('debugLogSpoiler');
         const logDetails = document.getElementById('logDetails');
-
+        const userIdDisplay = document.getElementById('userIdDisplay');
+        const addMappingForm = document.getElementById('addMappingForm');
+        const authorNameInput = document.getElementById('authorNameInput');
+        const snilsInput = document.getElementById('snilsInput');
+        const missingMappingsContainer = document.getElementById('missingMappingsContainer');
+        const missingAuthorsList = document.getElementById('missingAuthorsList');
+        const missingCount = document.getElementById('missingCount');
+        const forceConvertButton = document.getElementById('forceConvertButton');
+        const fileUploadSection = document.getElementById('fileUploadSection');
+        const exportMappingsButton = document.getElementById('exportMappingsButton');
+        const importMappingsButton = document.getElementById('importMappingsButton');
+        const importMappingsInput = document.getElementById('importMappingsInput');
+        
         // --- УТИЛИТЫ ---
         let errorCount = 0;
 
-        function startProcessing() {
-            logDetails.innerHTML = ''; // Очистка лога перед началом
+        function updateUserIdDisplay(status, id = null) {
+            userIdDisplay.textContent = `Статус авторизации: ${status}. ${id ? 'ID: ' + id.substring(0, 8) + '...' : ''}`;
+        }
+
+        function startProcessingUI(message = 'Начало обработки файла...') {
+            logDetails.innerHTML = ''; 
             errorCount = 0;
-            statusMessage.textContent = 'Начало обработки файла...';
-            statusMessage.classList.remove('text-red-600');
+            statusMessage.textContent = message;
+            statusMessage.classList.remove('text-red-600', 'text-yellow-600');
             statusMessage.classList.add('text-gray-600');
             processingIndicator.classList.remove('hidden');
             downloadButton.disabled = true;
             downloadButton.classList.add('opacity-50', 'cursor-not-allowed', 'disabled:shadow-none');
             downloadButton.classList.remove('bg-emerald-500', 'hover:bg-emerald-600');
             recordCountElement.classList.add('hidden');
+            missingMappingsContainer.classList.add('hidden');
+            fileUploadSection.classList.remove('hidden');
+            missingAuthorsFromCurrentFile.clear();
         }
 
-        function stopProcessing() {
+        function stopProcessingUI() {
             processingIndicator.classList.add('hidden');
             if (errorCount > 0) {
-                 debugLogSpoiler.open = true; // Открываем лог, если были ошибки
+                 debugLogSpoiler.open = true; 
             }
         }
 
-        function updateStatus(message, isError = false) {
+        function updateStatus(message, isError = false, isWarning = false) {
             statusMessage.textContent = message;
-            statusMessage.className = `font-semibold text-lg mb-4 ${isError ? 'text-red-600' : 'text-gray-600'}`;
+            let color = 'text-gray-600';
+            if (isError) color = 'text-red-600';
+            else if (isWarning) color = 'text-yellow-600';
+
+            statusMessage.className = `font-semibold text-lg mb-4 ${color}`;
             if (isError) {
                 downloadButton.disabled = true;
                 downloadButton.classList.add('opacity-50', 'cursor-not-allowed', 'disabled:shadow-none');
@@ -265,29 +310,29 @@
             recordCountElement.classList.remove('hidden');
         }
         
-        /**
-         * Обновленная функция для логирования с поддержкой иконок и цветов, в компактном формате.
-         */
         function logMessage(message, level = 'INFO') {
             const timestamp = new Date().toLocaleTimeString('ru-RU');
             
             let iconSvg = '';
             let textColor = 'text-gray-700';
-            let levelColor = 'text-emerald-600'; // Используем emerald
+            let levelColor = 'text-emerald-600'; 
             let levelDisplay = 'ИНФО';
 
             if (level === 'ERROR') {
-                // Восклицательный знак (Ошибка).
                 iconSvg = '<svg class="w-4 h-4 mr-1 flex-shrink-0 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.3 16c-.77 1.333.192 3 1.732 3z" /></svg>';
                 textColor = 'text-red-700';
                 levelColor = 'text-red-600';
                 levelDisplay = 'ОШИБКА';
+                errorCount++;
+            } else if (level === 'WARNING') {
+                 iconSvg = '<svg class="w-4 h-4 mr-1 flex-shrink-0 text-yellow-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.3 16c-.77 1.333.192 3 1.732 3z" /></svg>';
+                textColor = 'text-yellow-700';
+                levelColor = 'text-yellow-600';
+                levelDisplay = 'ВНИМАНИЕ';
             } else {
-                // Галочка (Инфо).
                 iconSvg = '<svg class="w-4 h-4 mr-1 flex-shrink-0 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg>';
             }
 
-            // Строгая конкатенация в одну строку без пробелов между span
             const logEntryHtml = `
                 <div class="flex items-start text-xs font-mono py-0 leading-snug">
                     ${iconSvg}
@@ -295,262 +340,423 @@
                 </div>
             `;
             
-            // Используем innerHTML += для добавления
             logDetails.innerHTML += logEntryHtml;
-            logDetails.scrollTop = logDetails.scrollHeight; // Прокрутка вниз
+            logDetails.scrollTop = logDetails.scrollHeight; 
         }
 
         function logError(message) {
             logMessage(message, 'ERROR');
-            errorCount++;
         }
         
-        function hasEncodingIssues(text) {
-            // U+FFFD is the Unicode Replacement Character, often used when decoding fails.
-            return text.includes('\uFFFD');
+        function getMappingsCollection() {
+            const { collection } = window.firebaseImports;
+            if (!db || !userId) return null;
+            const path = `artifacts/${appId}/users/${userId}/snils_mappings`;
+            return collection(db, path);
         }
-
-        /**
-         * Парсит строку даты из CSV в объект Date. Поддерживает форматы DD.MM.YYYY, DD-MM-YYYY, YYYY-MM-DD.
-         * @param {string} dateStr - Строка даты (может содержать время).
-         * @returns {Date | null} Объект Date или null при ошибке.
-         */
-        function parseDate(dateStr) {
-            const formats = ["YYYY-MM-DD", "DD.MM.YYYY", "DD-MM-YYYY"];
+        
+        // --- FIREBASE LOGIC ---
+        
+        async function initFirebase() {
+            const { initializeApp, getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged, getFirestore } = window.firebaseImports;
             
-            // Удаляем компонент времени
-            const cleanDateStr = dateStr.trim().split(' ')[0];
+            if (!firebaseConfig.apiKey) {
+                logError('Отсутствует конфигурация Firebase. Постоянное хранение отключено.');
+                isAuthReady = true;
+                updateUserIdDisplay('ОШИБКА КОНФИГУРАЦИИ');
+                return;
+            }
 
-            for (const format of formats) {
-                // Ищем все числа в строке (должно быть 3)
-                const parts = cleanDateStr.match(/(\d+)/g); 
-                
-                if (parts && parts.length === 3) {
-                    let year, month, day;
+            // setLogLevel('debug');
+            const app = initializeApp(firebaseConfig);
+            db = getFirestore(app);
+            auth = getAuth(app);
 
-                    if (format === "YYYY-MM-DD") {
-                        [year, month, day] = parts.map(Number);
-                    } else { // DD.MM.YYYY or DD-MM-YYYY
-                        // При парсинге DD.MM.YYYY, DD-MM-YYYY
-                        [day, month, year] = parts.map(Number);
-                    }
-
-                    // JavaScript Date: месяц 0-индексированный (0=Янв, 11=Дек)
-                    const dateObj = new Date(year, month - 1, day);
-
-                    // Проверка на корректность парсинга (например, 30 февраля)
-                    if (dateObj.getFullYear() === year && dateObj.getMonth() === month - 1 && dateObj.getDate() === day) {
-                        return dateObj;
+            onAuthStateChanged(auth, async (user) => {
+                if (user) {
+                    userId = user.uid;
+                    isAuthReady = true;
+                    updateUserIdDisplay('Аутентифицирован', userId);
+                    loadMappings();
+                } else {
+                    try {
+                        if (initialAuthToken) {
+                            await signInWithCustomToken(auth, initialAuthToken);
+                        } else {
+                            await signInAnonymously(auth);
+                        }
+                    } catch (error) {
+                        logError(`Ошибка аутентификации: ${error.message}. Попытка анонимного входа.`);
+                        await signInAnonymously(auth);
                     }
                 }
-            }
-            return null; // Если парсинг не удался
-        }
-
-        /**
-         * Форматирует строку даты в ISO формат YYYY-MM-DD.
-         * @param {string} dateStr - Строка даты из CSV.
-         * @returns {string} Дата в формате YYYY-MM-DD или пустая строка.
-         */
-        function formatDateToISO(dateStr) {
-            const dt = parseDate(dateStr);
-            if (!dt) {
-                // logError вызывается внутри parseDate, нет необходимости вызывать здесь
-                return ""; 
-            }
-
-            // Форматируем в YYYY-MM-DD
-            const y = dt.getFullYear();
-            const m = String(dt.getMonth() + 1).padStart(2, '0');
-            const d = String(dt.getDate()).padStart(2, '0');
-            
-            return `${y}-${m}-${d}`;
-        }
-
-
-        function mapSuitability(suitabilityText) {
-            const text = suitabilityText.trim().toLowerCase();
-            if (text === "да" || text === "yes") {
-                return '1';
-            }
-            if (text === "нет" || text === "no") {
-                return '2';
-            }
-            logError(`Не удалось определить пригодность для текста: "${suitabilityText}". Установлено значение по умолчанию: "Да" (1).`);
-            return '1'; // По умолчанию '1'
-        }
-
-        function calculateDateEndVerification(dateVerificationStr) {
-            const dtStart = parseDate(dateVerificationStr);
-            if (!dtStart) return ""; 
-
-            // Добавляем 2 года
-            const dtEnd = new Date(dtStart.getTime()); 
-            dtEnd.setFullYear(dtStart.getFullYear() + 2);
-
-            // Вычитаем 1 день
-            dtEnd.setDate(dtEnd.getDate() - 1);
-
-            // Форматируем в YYYY-MM-DD
-            const y = dtEnd.getFullYear();
-            const m = String(dtEnd.getMonth() + 1).padStart(2, '0');
-            const d = String(dtEnd.getDate()).padStart(2, '0');
-            
-            return `${y}-${m}-${d}`;
+            });
         }
         
-        /**
-         * Генерирует имя файла в формате YYYYMMDD_HHmmss_output.xml.
-         * @returns {string} Сформированное имя файла.
-         */
-        function generateFileName() {
-            const now = new Date();
-            const y = String(now.getFullYear());
-            const m = String(now.getMonth() + 1).padStart(2, '0');
-            const d = String(now.getDate()).padStart(2, '0');
-            const hh = String(now.getHours()).padStart(2, '0');
-            const mm = String(now.getMinutes()).padStart(2, '0');
-            const ss = String(now.getSeconds()).padStart(2, '0');
+        function loadMappings() {
+            const { onSnapshot } = window.firebaseImports;
+
+            const mappingsCol = getMappingsCollection();
+            if (!mappingsCol) {
+                logError('Не удалось загрузить сопоставления: Firestore не готов.');
+                return;
+            }
             
-            return `${y}${m}${d}_${hh}${mm}${ss}_output.xml`;
+            onSnapshot(mappingsCol, (snapshot) => {
+                snilsMap.clear();
+                currentMappingsData = [];
+                let htmlList = '';
+
+                snapshot.forEach(doc => {
+                    const data = doc.data();
+                    const id = doc.id;
+                    const searchKey = data.fullName.toUpperCase().replace(/\s/g, ''); 
+                    snilsMap.set(searchKey, data.snils);
+                    
+                    // Store the data for export
+                    currentMappingsData.push({ id: id, fullName: data.fullName, snils: data.snils });
+
+                    htmlList += `
+                        <li class="flex justify-between items-center py-2 border-b border-gray-100 last:border-b-0">
+                            <span class="font-medium text-gray-700 w-1/2 overflow-hidden text-ellipsis whitespace-nowrap">${data.fullName}</span>
+                            <span class="font-mono text-gray-500 text-sm flex-shrink-0">${data.snils}</span>
+                            <button onclick="window.deleteMapping('${id}')" title="Удалить сопоставление" class="ml-4 text-red-500 hover:text-red-700 p-1 rounded-full bg-red-50 hover:bg-red-100 transition-colors">
+                                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                            </button>
+                        </li>
+                    `;
+                });
+
+                document.getElementById('mappingsList').innerHTML = htmlList || '<p class="text-sm text-gray-500 italic">Нет сохраненных СНИЛС-сопоставлений. Добавьте первое.</p>';
+                logMessage(`Загружено ${snilsMap.size} СНИЛС-сопоставлений из Firestore.`);
+                
+                // Enable export button if there are mappings
+                exportMappingsButton.disabled = currentMappingsData.length === 0;
+
+                // If there was a pending analysis, rerun it to see if new mappings cover the missing authors
+                if (isAnalysisPending) {
+                     isAnalysisPending = false; // Reset flag
+                     // Only proceed if file content is present (i.e., we paused after a file drop)
+                     if (currentFileContent) {
+                         // Rerunning the full file analysis will update the missing list UI
+                         identifyMissingAuthorsInFile(currentFileContent, currentFilename); 
+                     }
+                }
+
+            }, (error) => {
+                logError(`Ошибка при подписке на SNILS-сопоставления: ${error.message}`);
+            });
+        }
+        
+        window.deleteMapping = async (docId) => {
+            const { deleteDoc, doc } = window.firebaseImports;
+            if (!db || !userId) {
+                logError('Невозможно удалить: Firestore не инициализирован.');
+                return;
+            }
+            try {
+                const path = `artifacts/${appId}/users/${userId}/snils_mappings`;
+                await deleteDoc(doc(db, path, docId));
+                logMessage(`Сопоставление с ID ${docId} удалено.`);
+            } catch (e) {
+                logError(`Ошибка удаления сопоставления: ${e.message}`);
+            }
+        };
+        
+        addMappingForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const fullName = authorNameInput.value.trim();
+            const snils = snilsInput.value.trim();
+            await saveMapping(fullName, snils);
+            authorNameInput.value = '';
+            snilsInput.value = '';
+        });
+
+        /**
+         * Сохраняет одно сопоставление в Firestore.
+         * @param {string} fullName ФИО автора.
+         * @param {string} snils СНИЛС (11 цифр).
+         * @returns {Promise<boolean>} Успех операции.
+         */
+        async function saveMapping(fullName, snils) {
+            const { addDoc } = window.firebaseImports;
+            if (!isAuthReady || !db) {
+                logError('Невозможно добавить сопоставление: Дождитесь инициализации Firestore.');
+                return false;
+            }
+
+            // Simple validation
+            const snilsRegex = /^\d{11}$/;
+            if (!fullName || !snilsRegex.test(snils)) {
+                logError('Некорректные данные: ФИО и СНИЛС (11 цифр) обязательны.');
+                return false;
+            }
+
+            try {
+                const mappingsCol = getMappingsCollection();
+                await addDoc(mappingsCol, {
+                    fullName: fullName,
+                    snils: snils
+                });
+                logMessage(`Добавлено новое сопоставление: ${fullName} -> ${snils}`);
+                return true;
+            } catch (error) {
+                logError(`Ошибка при добавлении сопоставления: ${error.message}`);
+                return false;
+            }
+        }
+        
+        // --- ЛОГИКА ИМПОРТА/ЭКСПОРТА ---
+
+        function handleExportMappings() {
+            if (currentMappingsData.length === 0) {
+                logMessage('Нет данных для экспорта.');
+                return;
+            }
+
+            const exportPayload = {
+                timestamp: new Date().toISOString(),
+                format: "FGIS_SNILS_MAPPINGS_V1",
+                description: "Exported SNILS mappings for FGIS FSA converter.",
+                mappings: currentMappingsData.map(d => ({ fullName: d.fullName, snils: d.snils }))
+            };
+
+            const dataStr = JSON.stringify(exportPayload, null, 2);
+            const blob = new Blob([dataStr], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `fgis_snils_mappings_${new Date().toISOString().slice(0, 10)}.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            
+            logMessage(`Сопоставления (${currentMappingsData.length} записей) выгружены в JSON-файл.`);
+        }
+
+        async function handleImportMappings(file) {
+            const { getDocs, query, writeBatch, getFirestore } = window.firebaseImports;
+            if (!isAuthReady || !db) {
+                logError('Невозможно импортировать: Firestore не инициализирован.');
+                return;
+            }
+            
+            logMessage(`Чтение файла импорта: ${file.name}...`);
+
+            const reader = new FileReader();
+            reader.onload = async (e) => {
+                try {
+                    const importedData = JSON.parse(e.target.result);
+
+                    if (importedData.format !== "FGIS_SNILS_MAPPINGS_V1" || !Array.isArray(importedData.mappings)) {
+                        throw new Error('Неверный формат файла сопоставлений.');
+                    }
+
+                    const newMappings = importedData.mappings;
+                    if (newMappings.length === 0) {
+                        logMessage('Файл импорта не содержит сопоставлений. Операция отменена.');
+                        return;
+                    }
+                    
+                    const mappingsCol = getMappingsCollection();
+                    const batch = writeBatch(db);
+                    let importedCount = 0;
+                    
+                    // Очистка всех существующих сопоставлений перед импортом
+                    const existingDocs = await getDocs(query(mappingsCol));
+                    existingDocs.forEach(doc => {
+                        batch.delete(doc.ref);
+                    });
+
+                    // Добавление новых сопоставлений
+                    newMappings.forEach(mapping => {
+                        if (mapping.fullName && mapping.snils && /^\d{11}$/.test(mapping.snils)) {
+                            // Firestore auto-generates doc ID for addDoc, but batch requires a doc reference
+                            const newDocRef = mappingsCol.doc(); 
+                            batch.set(newDocRef, { 
+                                fullName: mapping.fullName, 
+                                snils: mapping.snils 
+                            });
+                            importedCount++;
+                        } else {
+                            logError(`Пропущена некорректная запись в импорте: ФИО: ${mapping.fullName || 'N/A'}, СНИЛС: ${mapping.snils || 'N/A'}`);
+                        }
+                    });
+
+                    await batch.commit();
+                    logMessage(`Импорт завершен. Очищено ${existingDocs.size} старых записей и добавлено ${importedCount} новых сопоставлений.`);
+                    // onSnapshot автоматически обновит UI и snilsMap
+                } catch (error) {
+                    logError(`Ошибка при импорте сопоставлений: ${error.message}`);
+                }
+            };
+            reader.readAsText(file);
         }
 
 
-        // --- ОСНОВНАЯ ЛОГИКА КОНВЕРТАЦИИ ---
+        // --- ГЛАВНАЯ ЛОГИКА АНАЛИЗА И КОНВЕРТАЦИИ ---
+        
+        function getParsedDataLines(csvContent, usedDelimiter) {
+             const lines = csvContent.split('\n').filter(line => line.trim() !== '');
+            if (lines.length <= HEADER_SKIP_LINES) return [];
 
-        function convertToXML(csvContent, usedDelimiter) {
-            logMessage('Начало процесса конвертации CSV в XML.');
-            const lines = csvContent.split('\n').filter(line => line.trim() !== '');
+            // Пропускаем строки заголовков
+            const dataLines = lines.slice(HEADER_SKIP_LINES);
+            if (dataLines.length === 0) return [];
             
-            if (lines.length <= HEADER_SKIP_LINES) {
-                logError('Файл содержит недостаточно строк для обработки (<= 2).');
-                return null;
-            }
-
-            // Пропускаем строки метаданных
-            const csvTextWithHeader = lines.slice(HEADER_SKIP_LINES);
-            logMessage(`Пропущено ${HEADER_SKIP_LINES} строк метаданных. Общее количество строк для анализа: ${csvTextWithHeader.length}.`);
-            
-            if (csvTextWithHeader.length === 0) {
-                 logError('После пропуска метаданных не осталось строк для обработки.');
-                 return null;
-            }
-
-            const headerLine = csvTextWithHeader[0];
+            const firstDataLine = dataLines[0];
             let effectiveDelimiter = usedDelimiter; 
 
-            // Если разделитель еще не определен, определяем его
             if (!effectiveDelimiter) {
-                const commaCount = (headerLine.match(/,/g) || []).length;
-                const semicolonCount = (headerLine.match(/;/g) || []).length;
+                // Пытаемся угадать разделитель
+                const commaCount = (firstDataLine.match(/,/g) || []).length;
+                const semicolonCount = (firstDataLine.match(/;/g) || []).length;
 
+                // Для АРШИН часто используется ';'
                 if (semicolonCount > commaCount + 2) {
                     effectiveDelimiter = ';';
                 } else {
                     effectiveDelimiter = ',';
                 }
-                logMessage(`Определен разделитель: "${effectiveDelimiter}". (Запятых: ${commaCount}, Точек с запятой: ${semicolonCount})`);
+                logMessage(`Определен разделитель: "${effectiveDelimiter}".`);
             }
             
-            // --- Пропускаем заголовок CSV (первая строка после метаданных) ---
-            const dataLines = csvTextWithHeader.slice(1); 
-            
-            // --- Улучшенный ручной парсинг CSV ---
             const dataRecords = dataLines.map((line, index) => {
                 if (!line.trim()) return [];
-                
                 const fields = [];
                 let currentField = '';
                 let inQuotes = false;
                 
                 for (let i = 0; i < line.length; i++) {
                     const char = line[i];
-                    
                     if (char === '"') {
                         inQuotes = !inQuotes;
                     } else if (char === effectiveDelimiter && !inQuotes) {
-                        // Помещаем очищенное поле
                         fields.push(currentField.trim().replace(/^"|"$/g, ''));
                         currentField = '';
                     } else {
                         currentField += char;
                     }
                 }
-                // Добавляем последнее поле
                 fields.push(currentField.trim().replace(/^"|"$/g, ''));
 
-                // Фильтруем пустые поля, которые могут быть в конце из-за разделителя
                 while (fields.length > 0 && fields[fields.length - 1] === '') {
                     fields.pop();
                 }
-                
-                if (fields.length < COL_INDEX.Document + 1) {
-                     logError(`Строка ${index + 1} (после заголовка) пропущена: недостаточно столбцов (${fields.length}, ожидается минимум ${COL_INDEX.Document + 1}).`);
-                }
-
                 return fields;
-            }).filter(fields => fields.length > COL_INDEX.Document); // Фильтруем по минимальной длине
+            }).filter(fields => fields.length > COL_INDEX.Document); 
+            
+            return dataRecords;
+        }
 
-            logMessage(`Найдено ${dataRecords.length} валидных записей для конвертации.`);
+        /**
+         * Шаг 1: Идентифицирует всех авторов из файла, для которых нет сопоставления СНИЛС.
+         */
+        function identifyMissingAuthors(csvContent) {
+            const allAuthors = new Set();
+            const missingAuthors = new Set();
+            
+            const dataRecords = getParsedDataLines(csvContent, null);
 
-            if (dataRecords.length === 0) {
-                 return null;
+            for (const fields of dataRecords) {
+                if (fields.length > COL_INDEX.Author) {
+                    const authorFull = fields[COL_INDEX.Author].trim();
+                    if (authorFull) {
+                        // FIX: Проверка, что строка данных не является случайно захваченным заголовком.
+                        // Строка заголовков "Автор: Автор записи" будет обработана как [0]: "Автор", [1]: "Автор записи"
+                        if (authorFull.toLowerCase() === 'автор записи') {
+                            logMessage('Обнаружен и пропущен потенциальный заголовок "Автор записи". Проверьте константу HEADER_SKIP_LINES.', 'WARNING');
+                            continue;
+                        }
+
+                        allAuthors.add(authorFull);
+                        const searchKey = authorFull.toUpperCase().replace(/\s/g, '');
+                        if (!snilsMap.has(searchKey)) {
+                            missingAuthors.add(authorFull);
+                        }
+                    }
+                }
             }
+            return missingAuthors;
+        }
 
-            // Начинаем строить XML
+        /**
+         * Шаг 2: Генерирует XML-файл, используя текущие сопоставления.
+         */
+        function generateFinalXML(csvContent) {
+            let recordCount = 0;
+            let currentErrors = 0; 
+            
+            const dataRecords = getParsedDataLines(csvContent, null);
+            if (dataRecords.length === 0) return { status: 'NO_RECORDS' };
+
             let xml = '<?xml version="1.0" encoding="UTF-8"?>\n';
             xml += '<Message xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="schema.xsd">\n';
             xml += '    <VerificationMeasuringInstrumentData>\n';
             
-            let recordCount = 0;
-            
             for (let i = 0; i < dataRecords.length; i++) {
                 const fields = dataRecords[i];
-                // Номер строки для лога (учитывая пропущенные строки метаданных и заголовок)
-                const lineNumber = i + HEADER_SKIP_LINES + 2; 
+                const lineNumber = i + HEADER_SKIP_LINES + 1; // Учитываем, что отсчет строк начинается с 1
 
-                if (fields.length < COL_INDEX.Document + 1) continue;
+                if (fields.length < COL_INDEX.Document + 1) {
+                    logError(`Строка ${lineNumber}: Недостаточно полей. Пропущена.`);
+                    currentErrors++;
+                    continue;
+                }
 
                 try {
-                    const authorFull = fields[COL_INDEX.Author];
+                    const authorFull = fields[COL_INDEX.Author].trim();
                     const documentNum = fields[COL_INDEX.Document];
-                    
-                    if (!documentNum || documentNum.trim() === '') {
-                        logError(`Строка ${lineNumber}: Пропущена, так как отсутствует номер документа (колонка ${COL_INDEX.Document}).`);
-                        continue;
-                    }
-
                     const dateVerification = fields[COL_INDEX.Date];
                     const typeInstrument = fields[COL_INDEX.Type];
                     const suitabilityText = fields[COL_INDEX.Suitability];
+                    
+                    if (authorFull.toLowerCase() === 'автор записи') {
+                        logMessage(`Строка ${lineNumber}: Пропущена потенциальная строка заголовка, содержащая "Автор записи".`, 'WARNING');
+                        continue;
+                    }
 
-                    // Разделение ФИО (Простая логика: Фамилия, затем Имя Отчество)
+                    if (!documentNum || documentNum.trim() === '') {
+                        logError(`Строка ${lineNumber}: Пропущена, отсутствует номер документа.`);
+                        currentErrors++;
+                        continue;
+                    }
+                    
+                    // --- ЛОГИКА ОПРЕДЕЛЕНИЯ СНИЛС (КРИТИЧНАЯ ПРОВЕРКА) ---
+                    const searchKey = authorFull.toUpperCase().replace(/\s/g, '');
+                    let effectiveSNILS = snilsMap.get(searchKey);
+
+                    if (!effectiveSNILS) {
+                        logError(`Строка ${lineNumber} (${documentNum}): Пропущена. Отсутствует СНИЛС для автора "${authorFull}".`);
+                        currentErrors++;
+                        continue;
+                    }
+
+                    // Разделение ФИО
                     const authorParts = authorFull.split(/\s+/).filter(p => p.length > 0);
                     const lastName = authorParts[0] || "Неизвестный";
                     const firstName = authorParts.slice(1).join(' ') || "Автор";
                     
                     const dateVerificationClean = dateVerification.split(' ')[0];
-                    
-                    // --- Форматирование даты в YYYY-MM-DD для тега DateVerification ---
-                    const formattedDateVerification = formatDateToISO(dateVerificationClean);
+                    const formattedDateVerification = window.formatDateToISO(dateVerificationClean);
                     
                     if (formattedDateVerification === "") {
                          logError(`Строка ${lineNumber} (${documentNum}): Не удалось преобразовать дату "${dateVerificationClean}". Запись пропущена.`);
+                         currentErrors++;
                          continue;
                     }
 
-                    const dateEndVerification = calculateDateEndVerification(dateVerificationClean);
-                    const resultVerification = mapSuitability(suitabilityText);
+                    const dateEndVerification = window.calculateDateEndVerification(dateVerificationClean);
+                    const resultVerification = window.mapSuitability(suitabilityText);
                     
-                    // Экранирование XML-специальных символов
                     const escape = (str) => str ? str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&apos;') : '';
 
                     xml += '        <VerificationMeasuringInstrument>\n';
                     xml += `            <NumberVerification>${escape(documentNum)}</NumberVerification>\n`;
-                    // Используем отформатированную дату
                     xml += `            <DateVerification>${escape(formattedDateVerification)}</DateVerification>\n`;
                     
-                    // Условие: DateEndVerification выводится только если ResultVerification = 1 ("Да"/"Пригоден")
                     if (resultVerification === '1') {
                         xml += `            <DateEndVerification>${escape(dateEndVerification)}</DateEndVerification>\n`;
                     }
@@ -561,7 +767,7 @@
                     xml += `                    <Last>${escape(lastName)}</Last>\n`;
                     xml += `                    <First>${escape(firstName)}</First>\n`;
                     xml += '                </Name>\n';
-                    xml += `                <SNILS>${SNILS_PLACEHOLDER}</SNILS>\n`;
+                    xml += `                <SNILS>${effectiveSNILS}</SNILS>\n`;
                     xml += '            </ApprovedEmployees>\n';
                     xml += `            <ResultVerification>${resultVerification}</ResultVerification>\n`;
                     xml += '        </VerificationMeasuringInstrument>\n';
@@ -569,29 +775,240 @@
                     recordCount++;
 
                 } catch (e) {
-                    logError(`Строка ${lineNumber}: Критическая ошибка обработки: ${e.message}.`);
+                    logError(`Строка ${lineNumber}: Критическая ошибка обработки: ${e.message}. Запись пропущена.`);
+                    currentErrors++;
                 }
             }
             
-            logMessage(`Всего обработано валидных записей: ${recordCount}. Ошибок обработки: ${errorCount}.`);
-
-            xml += '    </VerificationMeasuringInstrumentData>\n';
-            xml += '    <SaveMethod>2</SaveMethod>\n';
-            xml += '</Message>';
+            errorCount = currentErrors; // Update global counter
 
             if (recordCount > 0) {
-                return xml;
+                xml += '    </VerificationMeasuringInstrumentData>\n';
+                xml += '    <SaveMethod>2</SaveMethod>\n';
+                xml += '</Message>';
+                return { status: 'SUCCESS', xmlContent: xml, recordCount: recordCount };
             } else {
-                return null;
+                return { status: 'NO_RECORDS' };
             }
         }
+        
+        // --- UI LOGIC FOR MISSING MAPPINGS ---
+        
+        function displayMissingAuthors(authorsSet) {
+            missingAuthorsFromCurrentFile = authorsSet;
+            const authorsArray = Array.from(authorsSet).sort();
+            missingCount.textContent = authorsArray.length;
+            missingAuthorsList.innerHTML = '';
+            
+            if (authorsArray.length === 0) {
+                 updateStatus('Анализ завершен. Все СНИЛС найдены. Нажмите "Начать финальную конвертацию" для генерации XML.', false);
+                 forceConvertButton.textContent = 'Начать финальную конвертацию';
+                 forceConvertButton.classList.add('bg-emerald-600', 'hover:bg-emerald-700');
+                 forceConvertButton.classList.remove('bg-yellow-600', 'hover:bg-yellow-700');
+                 missingMappingsContainer.classList.remove('hidden');
+                 return;
+            }
 
-        function downloadXML(xmlContent, filename) {
+            updateStatus('Конвертация приостановлена. Требуется заполнить недостающие СНИЛС.', false, true);
+            fileUploadSection.classList.add('hidden');
+            missingMappingsContainer.classList.remove('hidden');
+
+            authorsArray.forEach(author => {
+                const cleanId = author.replace(/[^a-zA-Z0-9]/g, '_');
+                const card = document.createElement('div');
+                card.className = 'p-4 bg-white rounded-lg shadow-sm border border-red-100';
+                card.innerHTML = `
+                    <p class="font-bold text-gray-800 mb-2 truncate" title="${author}">Автор: ${author}</p>
+                    <form data-author="${author}" class="snils-save-form flex space-x-2">
+                        <input type="text" id="snils-${cleanId}" 
+                               placeholder="Введите 11 цифр СНИЛС" required pattern="\\d{11}" maxlength="11"
+                               class="flex-grow p-2 border border-red-300 rounded-md focus:ring-red-500 focus:border-red-500 text-sm">
+                        <button type="submit" class="flex-shrink-0 bg-red-500 text-white text-sm px-4 py-2 rounded-md hover:bg-red-600 transition-colors">
+                            Сохранить
+                        </button>
+                    </form>
+                `;
+                missingAuthorsList.appendChild(card);
+                
+                // Attach event listener to the form
+                card.querySelector('.snils-save-form').addEventListener('submit', async (e) => {
+                    e.preventDefault();
+                    const targetForm = e.target;
+                    const input = targetForm.querySelector('input');
+                    const button = targetForm.querySelector('button');
+                    
+                    const authorName = targetForm.dataset.author;
+                    const snilsValue = input.value.trim();
+
+                    if (snilsValue.length === 11 && /^\d{11}$/.test(snilsValue)) {
+                        button.disabled = true;
+                        button.textContent = 'Сохранение...';
+                        const success = await saveMapping(authorName, snilsValue);
+                        if (success) {
+                             isAnalysisPending = true; // Reruns analysis after onSnapshot fires
+                        } else {
+                             button.disabled = false;
+                             button.textContent = 'Сохранить';
+                        }
+                    } else {
+                        logError('СНИЛС должен содержать ровно 11 цифр.');
+                    }
+                });
+            });
+
+            forceConvertButton.textContent = 'Продолжить конвертацию (Пропустить недостающие)';
+            forceConvertButton.classList.remove('bg-emerald-600', 'hover:bg-emerald-700');
+            forceConvertButton.classList.add('bg-yellow-600', 'hover:bg-yellow-700');
+        }
+
+        // --- ГЛАВНЫЙ КОНТРОЛЛЕР ФАЙЛОВ И КОНВЕРТАЦИИ ---
+
+        async function startConversion(content, filename, isFinalRun = false) {
+            if (!isAuthReady) {
+                 updateStatus("Пожалуйста, подождите, пока загрузится хранилище СНИЛС...", false);
+                 return;
+            }
+
+            currentFileContent = content;
+            currentFilename = filename;
+            
+            startProcessingUI(isFinalRun ? 'Финальная генерация XML...' : 'Шаг 1: Анализ файла на недостающие СНИЛС...');
+            const startTime = performance.now();
+
+            if (!isFinalRun) {
+                // --- ШАГ 1: АНАЛИЗ ---
+                const missingAuthors = identifyMissingAuthors(content);
+                missingAuthorsFromCurrentFile = missingAuthors; 
+                logMessage(`Найдено уникальных авторов, требующих СНИЛС: ${missingAuthors.size}`);
+
+                if (missingAuthors.size > 0) {
+                    const elapsedTime = performance.now() - startTime;
+                    const delay = Math.max(0, MIN_PROCESSING_TIME - elapsedTime);
+                    
+                    setTimeout(() => {
+                        stopProcessingUI();
+                        displayMissingAuthors(missingAuthors);
+                    }, delay);
+                    return; // PAUSE
+                } else {
+                    logMessage('Все необходимые СНИЛС найдены. Переход к генерации XML.');
+                    isFinalRun = true; 
+                }
+            }
+
+            // --- ШАГ 2: ФИНАЛЬНАЯ КОНВЕРТАЦИЯ XML ---
+            let finalXmlContent = null;
+            let result = null;
+
+            try {
+                result = generateFinalXML(content);
+
+                if (result.status === 'SUCCESS') {
+                    finalXmlContent = result.xmlContent;
+                } else if (result.status === 'NO_RECORDS') {
+                    throw new Error("Не найдено валидных записей для конвертации.");
+                }
+
+            } catch(e) {
+                 logError(`КРИТИЧЕСКАЯ ОШИБКА: ${e.message}`);
+                 finalXmlContent = null;
+            }
+
+            // Задержка для анимации
+            const elapsedTime = performance.now() - startTime;
+            const delay = Math.max(0, MIN_PROCESSING_TIME - elapsedTime);
+
+            setTimeout(() => {
+                stopProcessingUI();
+                
+                if (finalXmlContent) {
+                    updateSuccess(result.recordCount);
+                    downloadButton.onclick = () => window.downloadXML(finalXmlContent, window.generateFileName());
+                    // Clear state
+                    missingMappingsContainer.classList.add('hidden');
+                    fileUploadSection.classList.remove('hidden');
+                } else {
+                    updateStatus("Конвертация завершена с ошибками или без записей. Проверьте лог.", true);
+                }
+            }, delay);
+        }
+        
+        // --- УТИЛИТАРНЫЕ МЕТОДЫ (ВЫНЕСЕНЫ В WINDOW ДЛЯ ГЛОБАЛЬНОГО ДОСТУПА) ---
+        window.parseDate = function(dateStr) {
+            const formats = ["YYYY-MM-DD", "DD.MM.YYYY", "DD-MM-YYYY"];
+            const cleanDateStr = dateStr.trim().split(' ')[0];
+
+            for (const format of formats) {
+                const parts = cleanDateStr.match(/(\d+)/g); 
+                if (parts && parts.length === 3) {
+                    let year, month, day;
+
+                    if (format === "YYYY-MM-DD") {
+                        [year, month, day] = parts.map(Number);
+                    } else { 
+                        [day, month, year] = parts.map(Number);
+                    }
+                    if (year < 100) year += 2000;
+
+                    const dateObj = new Date(year, month - 1, day);
+                    if (dateObj.getFullYear() === year && dateObj.getMonth() === month - 1 && dateObj.getDate() === day) {
+                        return dateObj;
+                    }
+                }
+            }
+            return null; 
+        };
+        
+        window.formatDateToISO = function(dateStr) {
+            const dt = window.parseDate(dateStr);
+            if (!dt) return ""; 
+            const y = dt.getFullYear();
+            const m = String(dt.getMonth() + 1).padStart(2, '0');
+            const d = String(dt.getDate()).padStart(2, '0');
+            return `${y}-${m}-${d}`;
+        };
+
+        window.mapSuitability = function(suitabilityText) {
+            const text = suitabilityText.trim().toLowerCase();
+            if (text === "да" || text === "yes" || text === "годен") return '1';
+            if (text === "нет" || text === "no" || text === "не годен") return '2';
+            logError(`Не удалось определить пригодность для текста: "${suitabilityText}". Установлено значение по умолчанию: "Да" (1).`);
+            return '1'; 
+        };
+
+        window.calculateDateEndVerification = function(dateVerificationStr) {
+            const dtStart = window.parseDate(dateVerificationStr);
+            if (!dtStart) return ""; 
+
+            const dtEnd = new Date(dtStart.getTime()); 
+            dtEnd.setFullYear(dtStart.getFullYear() + 2);
+            dtEnd.setDate(dtEnd.getDate() - 1); // Один день до двух лет
+
+            const y = dtEnd.getFullYear();
+            const m = String(dtEnd.getMonth() + 1).padStart(2, '0');
+            const d = String(dtEnd.getDate()).padStart(2, '0');
+            
+            return `${y}-${m}-${d}`;
+        };
+        
+        window.generateFileName = function() {
+            const now = new Date();
+            const y = String(now.getFullYear());
+            const m = String(now.getMonth() + 1).padStart(2, '0');
+            const d = String(now.getDate()).padStart(2, '0');
+            const hh = String(now.getHours()).padStart(2, '0');
+            const mm = String(now.getMinutes()).padStart(2, '0');
+            const ss = String(now.getSeconds()).padStart(2, '0');
+            
+            return `${y}${m}${d}_${hh}${mm}${ss}_output.xml`;
+        };
+        
+        window.downloadXML = function(xmlContent, filename) {
             const blob = new Blob([xmlContent], { type: 'text/xml;charset=utf-8' });
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
-            a.download = filename; // Используем сгенерированное имя
+            a.download = filename; 
             document.body.appendChild(a);
             a.click();
             document.body.removeChild(a);
@@ -608,7 +1025,10 @@
             });
         }
 
-        // --- ОБРАБОТЧИКИ СОБЫТИЙ ---
+        function hasEncodingIssues(text) {
+            // Check for Unicode replacement character
+            return text.includes('\uFFFD');
+        }
 
         async function handleFiles(files) {
             if (files.length === 0) return;
@@ -621,17 +1041,8 @@
             }
             
             fileNameDisplay.textContent = `Выбран файл: ${file.name}`;
-            startProcessing();
-            const startTime = performance.now();
-
-            let csvContent = null;
-            let finalXmlContent = null;
-            let filename = '';
-            let success = false;
-            let errorMessage = '';
-
+            
             try {
-                // --- Чтение файла с автоопределением кодировки ---
                 logMessage('Попытка чтения файла с кодировкой UTF-8...');
                 let content = await readFileWithEncoding(file, 'UTF-8');
                 
@@ -643,55 +1054,29 @@
                     logMessage('Файл успешно прочитан с кодировкой UTF-8.');
                 }
                 
-                csvContent = content;
-                logMessage('Чтение файла завершено. Запуск конвертера.');
-
-                // --- Конвертация ---
-                finalXmlContent = convertToXML(csvContent, null);
-
-                if (finalXmlContent) {
-                    filename = generateFileName();
-                    success = true;
-                } else {
-                    errorMessage = "Ошибка: Не найдено валидных записей для конвертации. Проверьте лог отладки.";
-                    logError(errorMessage);
-                }
+                // Запускаем анализ
+                await startConversion(content, file.name);
 
             } catch(e) {
-                 errorMessage = `Критическая ошибка чтения или обработки файла: ${e.message}`;
-                 logError(`КРИТИЧЕСКАЯ ОШИБКА: ${e.message}`);
+                 logError(`Критическая ошибка чтения файла: ${e.message}`);
+                 updateStatus(`Ошибка чтения файла: ${e.message}`, true);
+                 stopProcessingUI();
             }
-
-            // --- Управление временем анимации ---
-            const elapsedTime = performance.now() - startTime;
-            const delay = Math.max(0, MIN_PROCESSING_TIME - elapsedTime);
-
-            setTimeout(() => {
-                stopProcessing();
-                
-                if (success) {
-                    const recordCount = finalXmlContent.match(/<VerificationMeasuringInstrument>/g).length;
-                    updateSuccess(recordCount);
-                    downloadButton.onclick = () => downloadXML(finalXmlContent, filename);
-                } else {
-                    updateStatus(errorMessage, true);
-                }
-            }, delay);
         }
 
+        // --- ИНИЦИАЛИЗАЦИЯ И ОБРАБОТЧИКИ DOM ---
+        
         // Drop Area Events
         dropArea.addEventListener('click', () => fileInput.click());
         
-        // ИСПРАВЛЕНИЕ: Сброс значения fileInput после обработки для повторного срабатывания 'change'
         fileInput.addEventListener('change', (e) => {
             handleFiles(e.target.files);
-            // Это гарантирует, что событие сработает, даже если выбран тот же файл
             e.target.value = null; 
         });
 
         ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
-            dropArea.addEventListener(eventName, preventDefaults, false);
-            document.body.addEventListener(eventName, preventDefaults, false);
+            dropArea.addEventListener(eventName, window.preventDefaults, false);
+            document.body.addEventListener(eventName, window.preventDefaults, false);
         });
 
         ['dragenter', 'dragover'].forEach(eventName => {
@@ -708,13 +1093,41 @@
             handleFiles(files);
         }, false);
 
-        function preventDefaults(e) {
+        window.preventDefaults = function(e) {
             e.preventDefault();
             e.stopPropagation();
         }
+        
+        // Обработчик кнопки принудительной конвертации
+        forceConvertButton.addEventListener('click', () => {
+             if (currentFileContent) {
+                 logMessage('Пользователь инициировал финальную конвертацию.');
+                 // Сбрасываем UI и запускаем финальный проход
+                 startConversion(currentFileContent, currentFilename, true); 
+             } else {
+                 logError('Нет загруженного файла для конвертации.');
+             }
+        });
+        
+        // Обработчики кнопок Импорта/Экспорта
+        exportMappingsButton.addEventListener('click', handleExportMappings);
 
-        // Инициализация
-        updateStatus("Готов к работе. Поддерживается автоопределение кодировки.");
+        importMappingsButton.addEventListener('click', () => {
+            importMappingsInput.click();
+        });
+
+        importMappingsInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                handleImportMappings(file);
+            }
+            e.target.value = null; // Reset input
+        });
+
+
+        // Запуск Firebase
+        initFirebase();
+        updateStatus("Готов к работе. Дождитесь загрузки сопоставлений СНИЛС.");
     </script>
 </body>
 </html>
