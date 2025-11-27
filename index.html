@@ -124,7 +124,7 @@
                 <p>В Excel выберите "Сохранить как" и выберите тип файла <span class="font-medium">CSV (разделители-запятые)</span> или <span class="font-medium">CSV (разделители-точки с запятой)</span>. Конвертер автоматически определит разделитель.</p>
                 
                 <p class="text-xs italic mt-4 text-sky-700">
-                    <span class="font-semibold">Расчет МПИ:</span> Дата окончания поверки рассчитывается как (Дата Поверки + МПИ в месяцах - 1 день).
+                    <span class="font-semibold">Расчет МПИ:</span> Дата окончания поверки рассчитывается как (Дата Поверки + МПИ в месяцах - 1 день). Если значение МПИ равно "-", в выходном файле дата окончания устанавливается как 2100-01-01.
                 </p>
             </div>
         </details>
@@ -182,7 +182,7 @@
                             Обнаружены недостающие МПИ!
                         </h3>
                         <p class="mt-1 text-sm text-orange-700">
-                            Введите Межповерочный Интервал (в месяцах) для следующих Номеров записи ГРСИ.
+                            Введите Межповерочный Интервал (в месяцах) или "-" для бессрочной поверки для следующих Номеров записи ГРСИ.
                         </p>
                         <!-- ДИНАМИЧЕСКАЯ ФОРМА ДЛЯ БЫСТРОГО ВВОДА МПИ -->
                         <form id="missingMpiForm" class="mt-2 text-sm bg-orange-50 p-3 rounded max-h-56 overflow-y-auto space-y-2">
@@ -289,7 +289,7 @@
                 <form id="mpiMappingForm" class="flex flex-col sm:flex-row gap-2">
                     <input type="text" id="instrumentTypeInput" placeholder="Номер записи ГРСИ (как в CSV, колонка 4)" required
                            class="flex-1 p-2 border border-gray-300 rounded-lg focus:ring-1 focus:ring-green-500 focus:border-green-500 text-sm" autocomplete="off">
-                    <input type="number" id="mpiMonthsConfigInput" placeholder="МПИ (месяцы, напр. 12, 24)" min="1" required
+                    <input type="text" id="mpiMonthsConfigInput" placeholder="МПИ (мес., напр. 12, 24 или -)" pattern="^[0-9]+$|^-$" required
                            class="flex-1 p-2 border border-gray-300 rounded-lg focus:ring-1 focus:ring-green-500 focus:border-green-500 text-sm" autocomplete="off">
                     <button type="submit" class="bg-green-600 text-white p-2 rounded-lg font-medium hover:bg-green-700 transition duration-150 flex-shrink-0">
                         Добавить/Обновить
@@ -357,6 +357,8 @@
         const HEADER_SKIP_LINES = 2; 
         const MIN_PROCESSING_TIME = 1500; 
         const MAX_RECORDS_PER_FILE = 1000; // НОВАЯ КОНСТАНТА: Максимальное количество записей на файл
+        const MPI_NO_EXPIRY_MARK = '-'; // Значение МПИ, обозначающее бессрочную поверку
+        const MPI_NO_EXPIRY_DATE = '2100-01-01'; // Дата окончания поверки для бессрочного МПИ
 
         const COL_INDEX = {
             'Author': 1,
@@ -563,11 +565,17 @@
             return `${y}-${m}-${d}`;
         }
 
+        function isNoExpiryMpi(mpiValue) {
+            return typeof mpiValue === 'string' && mpiValue.trim() === MPI_NO_EXPIRY_MARK;
+        }
 
         /**
          * Функция расчета даты окончания поверки
          */
         function calculateDateEndVerification(dateVerificationStr, mpiMonths) {
+            if (isNoExpiryMpi(mpiMonths)) {
+                return MPI_NO_EXPIRY_DATE;
+            }
             const dtStart = parseDate(dateVerificationStr);
             
             if (!dtStart) return ""; 
@@ -774,7 +782,7 @@
                 <thead class="bg-gray-200 sticky top-0">
                     <tr>
                         <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Номер ГРСИ</th>
-                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">МПИ (мес.)</th>
+                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">МПИ (мес. или -)</th>
                         <th class="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Действие</th>
                     </tr>
                 </thead>
@@ -824,17 +832,20 @@
         function handleMpiMappingForm(e) {
             e.preventDefault();
             const grsiNumber = instrumentTypeInput.value.trim(); // Номер ГРСИ
-            const mpi = mpiMonthsConfigInput.value.trim();
-            const mpiInt = parseInt(mpi, 10);
+            const mpiRaw = mpiMonthsConfigInput.value.trim();
+            const isNoExpiry = mpiRaw === MPI_NO_EXPIRY_MARK;
+            const mpiInt = parseInt(mpiRaw, 10);
 
-            if (grsiNumber && !isNaN(mpiInt) && mpiInt > 0) {
-                mpiMonthsMap[grsiNumber] = mpiInt;
-                logMessage(`МПИ сопоставление добавлено/обновлено: ГРСИ №${grsiNumber} -> ${mpiInt} мес.`);
+            if (grsiNumber && (isNoExpiry || (!isNaN(mpiInt) && mpiInt > 0))) {
+                const mpiValue = isNoExpiry ? MPI_NO_EXPIRY_MARK : mpiInt;
+                const mpiText = isNoExpiry ? `бессрочный ("${MPI_NO_EXPIRY_MARK}")` : `${mpiInt} мес.`;
+                mpiMonthsMap[grsiNumber] = mpiValue;
+                logMessage(`МПИ сопоставление добавлено/обновлено: ГРСИ №${grsiNumber} -> ${mpiText}`);
                 saveAndRenderMpiMappings();
                 instrumentTypeInput.value = '';
                 mpiMonthsConfigInput.value = '';
             } else {
-                 logError('Ошибка: Проверьте правильность Номера ГРСИ и МПИ (должно быть целое число месяцев > 0).');
+                 logError(`Ошибка: Проверьте правильность Номера ГРСИ и МПИ (целое число месяцев > 0 или "${MPI_NO_EXPIRY_MARK}").`);
             }
         }
 
@@ -929,15 +940,19 @@
                     let totalCount = 0;
                     for (const key in importedMap) {
                         if (importedMap.hasOwnProperty(key)) {
-                            const mpi = parseInt(importedMap[key], 10);
-                            if (!isNaN(mpi) && mpi > 0) {
-                                if (mpiMonthsMap[key] !== mpi) {
+                            const rawValue = importedMap[key];
+                            const mpiString = typeof rawValue === 'string' ? rawValue.trim() : rawValue;
+                            const isNoExpiry = mpiString === MPI_NO_EXPIRY_MARK;
+                            const mpi = parseInt(mpiString, 10);
+                            if (isNoExpiry || (!isNaN(mpi) && mpi > 0)) {
+                                const valueToStore = isNoExpiry ? MPI_NO_EXPIRY_MARK : mpi;
+                                if (mpiMonthsMap[key] !== valueToStore) {
                                     newCount++;
                                 }
-                                mpiMonthsMap[key] = mpi;
+                                mpiMonthsMap[key] = valueToStore;
                                 totalCount++;
                             } else {
-                                logError(`Импорт МПИ: Пропущено невалидное значение МПИ для ГРСИ №"${key}".`);
+                                logError(`Импорт МПИ: Пропущено невалидное значение МПИ для ГРСИ №"${key}". Допустимы числа > 0 или "${MPI_NO_EXPIRY_MARK}".`);
                             }
                         }
                     }
@@ -1027,7 +1042,7 @@
                     div.className = 'flex flex-col sm:flex-row items-center gap-2 bg-white p-2 rounded shadow-sm border border-orange-200';
                     div.innerHTML = `
                         <span class="font-medium text-gray-800 text-sm w-full sm:w-2/5 truncate" title="${grsi}">ГРСИ №: ${grsi}</span>
-                        <input type="number" data-type="${grsi}" placeholder="МПИ (месяцы)" min="1"
+                        <input type="text" data-type="${grsi}" placeholder="МПИ (месяцы) или -" pattern="^[0-9]+$|^-$"
                                class="mpi-input flex-1 p-1 border border-gray-300 rounded text-sm w-full" autocomplete="off">
                     `;
                     missingMpiForm.appendChild(div);
@@ -1100,23 +1115,24 @@
 
             inputs.forEach(input => {
                 const grsiNumber = input.dataset.type; 
-                const mpi = parseInt(input.value.trim(), 10);
+                const rawValue = input.value.trim();
+                const isNoExpiry = rawValue === MPI_NO_EXPIRY_MARK;
+                const mpi = parseInt(rawValue, 10);
 
                 input.classList.remove('border-red-500', 'bg-red-50', 'border-emerald-500', 'bg-emerald-50');
                 
-                if (!isNaN(mpi)) {
-                    if (mpi > 0) {
-                        if (mpiMonthsMap[grsiNumber] !== mpi) {
-                            mpiMonthsMap[grsiNumber] = mpi;
-                            newMappingsCount++;
-                        }
-                        input.classList.add('border-emerald-500', 'bg-emerald-50');
-                        input.disabled = true; 
-                    } else {
-                        logError(`Некорректный МПИ для ГРСИ №${grsiNumber}. Ожидается целое число месяцев > 0.`);
-                        input.classList.add('border-red-500', 'bg-red-50');
-                        errorFound = true;
+                if (isNoExpiry || (!isNaN(mpi) && mpi > 0)) {
+                    const valueToStore = isNoExpiry ? MPI_NO_EXPIRY_MARK : mpi;
+                    if (mpiMonthsMap[grsiNumber] !== valueToStore) {
+                        mpiMonthsMap[grsiNumber] = valueToStore;
+                        newMappingsCount++;
                     }
+                    input.classList.add('border-emerald-500', 'bg-emerald-50');
+                    input.disabled = true; 
+                } else if (rawValue !== '') {
+                    logError(`Некорректный МПИ для ГРСИ №${grsiNumber}. Ожидается целое число месяцев > 0 или "${MPI_NO_EXPIRY_MARK}".`);
+                    input.classList.add('border-red-500', 'bg-red-50');
+                    errorFound = true;
                 }
             });
 
