@@ -33,20 +33,48 @@
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
+        /* CSS переменные для темной и светлой темы */
+        :root {
+            --bg-primary: #f0f4f8;
+            --bg-card: #ffffff;
+            --text-primary: #1f2937;
+            --text-secondary: #6b7280;
+            --border-color: #e5e7eb;
+            --accent-sky: #0ea5e9;
+            --accent-emerald: #10b981;
+            --grid-color: rgba(160, 174, 192, 0.15);
+        }
+
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --bg-primary: #0f172a;
+                --bg-card: #1e293b;
+                --text-primary: #f1f5f9;
+                --text-secondary: #94a3b8;
+                --border-color: #334155;
+                --accent-sky: #38bdf8;
+                --accent-emerald: #34d399;
+                --grid-color: rgba(100, 116, 139, 0.15);
+            }
+        }
+
         /* Custom styles */
         body {
             font-family: 'Inter', sans-serif;
-            background-color: #f0f4f8; 
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
             min-height: 100vh;
-            background-image: linear-gradient(0deg, transparent 14px, rgba(160, 174, 192, 0.15) 15px),
-                              linear-gradient(90deg, transparent 14px, rgba(160, 174, 192, 0.15) 15px);
+            background-image: linear-gradient(0deg, transparent 14px, var(--grid-color) 15px),
+                              linear-gradient(90deg, transparent 14px, var(--grid-color) 15px);
             background-size: 15px 15px; 
             background-attachment: fixed;
+            transition: background-color 0.3s ease, color 0.3s ease;
         }
         
         /* Главная карточка */
         .main-card {
-            background-color: #ffffff;
+            background-color: var(--bg-card);
+            transition: background-color 0.3s ease;
         }
 
         .drag-area {
@@ -54,9 +82,9 @@
             transition: all 0.3s ease;
         }
         .drag-area.active {
-            border-color: #0ea5e9; /* sky-500 */
-            background-color: #f0f9ff; /* sky-50 */
-            box-shadow: 0 0 0 4px rgba(14, 165, 233, 0.2); /* ring effect for focus */
+            border-color: var(--accent-sky);
+            background-color: rgba(14, 165, 233, 0.05);
+            box-shadow: 0 0 0 4px rgba(14, 165, 233, 0.2);
         }
         
         details[open] summary svg {
@@ -91,10 +119,214 @@
              border-color: #f97316; /* orange-500 */
              box-shadow: 0 0 0 1px #f97316;
         }
+
+        /* Стили для ползунков прокрутки - улучшенная версия */
+        ::-webkit-scrollbar {
+            width: 10px;
+            height: 10px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-card);
+            border-radius: 6px;
+            margin: 2px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: linear-gradient(135deg, var(--accent-sky) 0%, var(--accent-emerald) 100%);
+            border-radius: 6px;
+            border: 2px solid var(--bg-card);
+            transition: all 0.3s ease;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: linear-gradient(135deg, var(--accent-emerald) 0%, var(--accent-sky) 100%);
+            transform: scale(1.05);
+        }
+
+        ::-webkit-scrollbar-thumb:active {
+            background: linear-gradient(135deg, #0c94d4 0%, #0da371 100%);
+        }
+
+        ::-webkit-scrollbar-corner {
+            background: var(--bg-primary);
+        }
+
+        /* Для контейнеров с темным фоном */
+        .dark ::-webkit-scrollbar-track,
+        .dark::-webkit-scrollbar-track {
+            background: var(--bg-primary);
+        }
+
+        /* Для Firefox */
+        * {
+            scrollbar-width: thin;
+            scrollbar-color: var(--accent-sky) var(--bg-card);
+        }
+
+        /* Темная тема для Firefox */
+        @media (prefers-color-scheme: dark) {
+            * {
+                scrollbar-color: var(--accent-sky) var(--bg-primary);
+            }
+        }
+
+        /* Кастомный класс для контейнеров с прокруткой */
+        .custom-scrollbar {
+            scrollbar-width: thin;
+            scrollbar-color: var(--accent-sky) transparent;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: transparent;
+            margin: 4px;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: var(--accent-sky);
+            border-radius: 6px;
+            border: 2px solid transparent;
+            background-clip: content-box;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: var(--accent-emerald);
+            background-clip: content-box;
+        }
+
+        /* Плавная прокрутка для всего приложения */
+        html {
+            scroll-behavior: smooth;
+        }
+
+        /* Темная тема для различных элементов */
+        @media (prefers-color-scheme: dark) {
+            .drag-area {
+                border-color: #475569; /* slate-600 */
+            }
+            
+            .border-gray-200 {
+                border-color: var(--border-color);
+            }
+            
+            .bg-gray-50 {
+                background-color: rgba(30, 41, 59, 0.5);
+            }
+            
+            .bg-gray-100 {
+                background-color: rgba(30, 41, 59, 0.7);
+            }
+            
+            .text-gray-500 {
+                color: var(--text-secondary);
+            }
+            
+            .text-gray-700 {
+                color: var(--text-primary);
+            }
+            
+            .bg-sky-50 {
+                background-color: rgba(56, 189, 248, 0.1);
+            }
+            
+            .border-sky-200 {
+                border-color: rgba(56, 189, 248, 0.3);
+            }
+            
+            .text-sky-800 {
+                color: #bae6fd;
+            }
+            
+            .bg-yellow-50 {
+                background-color: rgba(253, 230, 138, 0.1);
+            }
+            
+            .border-yellow-300 {
+                border-color: rgba(253, 230, 138, 0.3);
+            }
+            
+            .text-yellow-800 {
+                color: #fef3c7;
+            }
+            
+            .bg-green-50 {
+                background-color: rgba(134, 239, 172, 0.1);
+            }
+            
+            .border-green-300 {
+                border-color: rgba(134, 239, 172, 0.3);
+            }
+            
+            .text-green-800 {
+                color: #d1fae5;
+            }
+            
+            .bg-white {
+                background-color: var(--bg-card);
+            }
+            
+            .bg-sky-100 {
+                background-color: rgba(56, 189, 248, 0.2);
+            }
+            
+            .shadow-inner {
+                box-shadow: inset 0 2px 4px 0 rgba(0, 0, 0, 0.2);
+            }
+            
+            .bg-red-100 {
+                background-color: rgba(248, 113, 113, 0.1);
+            }
+            
+            .bg-orange-100 {
+                background-color: rgba(251, 146, 60, 0.1);
+            }
+            
+            .bg-red-50 {
+                background-color: rgba(248, 113, 113, 0.05);
+            }
+            
+            .bg-orange-50 {
+                background-color: rgba(251, 146, 60, 0.05);
+            }
+            
+            .border-red-200 {
+                border-color: rgba(248, 113, 113, 0.3);
+            }
+            
+            .border-orange-200 {
+                border-color: rgba(251, 146, 60, 0.3);
+            }
+            
+            .bg-gray-200 {
+                background-color: rgba(51, 65, 85, 0.5);
+            }
+            
+            .divide-gray-200 > :not([hidden]) ~ :not([hidden]) {
+                border-color: var(--border-color);
+            }
+            
+            .hover\:bg-gray-50:hover {
+                background-color: rgba(30, 41, 59, 0.8);
+            }
+
+            /* Улучшенные стили для темной темы ползунков */
+            ::-webkit-scrollbar-track {
+                background: var(--bg-primary);
+            }
+            
+            ::-webkit-scrollbar-thumb {
+                border: 2px solid var(--bg-primary);
+            }
+            
+            .custom-scrollbar {
+                scrollbar-color: var(--accent-sky) var(--bg-primary);
+            }
+        }
         
     </style>
     <script>
         tailwind.config = {
+            darkMode: 'media',
             theme: {
                 extend: {
                     fontFamily: {
@@ -114,30 +346,30 @@
     <!-- Главная карточка - чистая, белая, с акцентной рамкой -->
     <div class="max-w-4xl mx-auto main-card p-6 md:p-10 rounded-xl shadow-xl border-t-4 border-accent-sky">
         <header class="mb-8 border-b border-gray-200 pb-4">
-            <h1 class="text-3xl font-bold text-gray-800 mb-1">
+            <h1 class="text-3xl font-bold text-gray-800 mb-1 dark:text-gray-100">
                 <span class="text-accent-sky">|</span> Конвертер данных <span class="text-accent-sky">ФГИС</span>
             </h1>
-            <p class="text-gray-500 text-base">
+            <p class="text-gray-500 text-base dark:text-gray-400">
                 Преобразование выгрузки ФГИС "АРШИН" в формат для загрузки в ФГИС ФСА.
             </p>
         </header>
 
         <!-- Instruction Guide Block -->
-        <details class="mb-8 p-4 bg-sky-50 border border-sky-200 rounded-lg">
-            <summary class="flex justify-between items-center cursor-pointer font-semibold text-sky-800 focus:outline-none">
+        <details class="mb-8 p-4 bg-sky-50 border border-sky-200 rounded-lg dark:bg-sky-900/20 dark:border-sky-800">
+            <summary class="flex justify-between items-center cursor-pointer font-semibold text-sky-800 dark:text-sky-200 focus:outline-none">
                 <span>
-                    <svg class="w-5 h-5 inline-block mr-2 text-sky-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                    <svg class="w-5 h-5 inline-block mr-2 text-sky-600 dark:text-sky-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
                     Инструкция по подготовке файла (ВАЖНО)
                 </span>
-                <svg class="w-4 h-4 text-sky-600 transition-transform duration-200" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
+                <svg class="w-4 h-4 text-sky-600 dark:text-sky-400 transition-transform duration-200" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
             </summary>
             
-            <div class="mt-3 text-sm text-gray-700 space-y-3">
-                <p class="font-bold text-sky-900">1. Проверка структуры файла:</p>
-                <p>Ваш файл должен быть экспортирован из реестра таким образом, чтобы заголовок таблицы начинался с <span class="font-mono bg-sky-100 p-1 rounded">3-й строки</span> (первые две строки – это метаданные, которые конвертер автоматически пропустит).</p>
+            <div class="mt-3 text-sm text-gray-700 dark:text-gray-300 space-y-3">
+                <p class="font-bold text-sky-900 dark:text-sky-100">1. Проверка структуры файла:</p>
+                <p>Ваш файл должен быть экспортирован из реестра таким образом, чтобы заголовок таблицы начинался с <span class="font-mono bg-sky-100 dark:bg-sky-900/30 p-1 rounded">3-й строки</span> (первые две строки – это метаданные, которые конвертер автоматически пропустит).</p>
                 
-                <p class="font-bold text-sky-900">2. Обязательные колонки (Индекс = номер колонки, начиная с 0):</p>
-                <ul class="list-disc list-inside ml-4 space-y-1 bg-white p-3 rounded border">
+                <p class="font-bold text-sky-900 dark:text-sky-100">2. Обязательные колонки (Индекс = номер колонки, начиная с 0):</p>
+                <ul class="list-disc list-inside ml-4 space-y-1 bg-white dark:bg-slate-800 p-3 rounded border dark:border-slate-700">
                     <li><span class="font-mono">Author</span> (Индекс **1**): ФИО автора записи. **Требуется сопоставление СНИЛС.**</li>
                     <li><span class="font-mono">Type</span> (Индекс **3**): Наименование типа СИ. (Используется для тега TypeMeasuringInstrument в XML)</li>
                     <li><span class="font-mono">GRSI</span> (Индекс **4**): Номер записи в ГРСИ. **Требуется сопоставление МПИ.**</li>
@@ -146,10 +378,10 @@
                     <li><span class="font-mono">Document</span> (Индекс **10**): Номер документа (протокола) поверки.</li>
                 </ul>
                 
-                <p class="font-bold text-sky-900">3. Сохранение в формат CSV:</p>
+                <p class="font-bold text-sky-900 dark:text-sky-100">3. Сохранение в формат CSV:</p>
                 <p>В Excel выберите "Сохранить как" и выберите тип файла <span class="font-medium">CSV (разделители-запятые)</span> или <span class="font-medium">CSV (разделители-точки с запятой)</span>. Конвертер автоматически определит разделитель.</p>
                 
-                <p class="text-xs italic mt-4 text-sky-700">
+                <p class="text-xs italic mt-4 text-sky-700 dark:text-sky-300">
                     <span class="font-semibold">Расчет МПИ:</span> Дата окончания поверки рассчитывается как (Дата Поверки + МПИ в месяцах - 1 день). Если значение МПИ равно "-", в выходном файле дата окончания устанавливается как 2100-01-01.
                 </p>
             </div>
@@ -160,39 +392,39 @@
             
             <!-- БЛОК 1: Загрузка файла (Drag-n-Drop) -->
             <div>
-                <h2 class="text-xl font-semibold text-gray-700 mb-3 border-b pb-1">
+                <h2 class="text-xl font-semibold text-gray-700 dark:text-gray-300 mb-3 border-b pb-1 dark:border-gray-700">
                     Загрузка исходного CSV
                 </h2>
-                <div id="drop-area" class="drag-area p-8 rounded-lg text-center cursor-pointer transition-all hover:ring-2 hover:ring-offset-2 hover:ring-sky-300">
+                <div id="drop-area" class="drag-area p-8 rounded-lg text-center cursor-pointer transition-all hover:ring-2 hover:ring-offset-2 hover:ring-sky-300 dark:hover:ring-sky-700">
                     <input type="file" id="fileInput" accept=".csv" class="hidden">
                     <svg class="mx-auto h-12 w-12 text-accent-sky" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 014 4v2a4 4 0 01-4 4H7z" />
                     </svg>
-                    <p class="mt-2 text-sm text-gray-600">
+                    <p class="mt-2 text-sm text-gray-600 dark:text-gray-400">
                         Перетащите CSV-файл сюда или <span class="text-accent-sky font-semibold">нажмите для выбора</span>
                     </p>
-                    <p id="fileNameDisplay" class="text-xs text-gray-400 mt-1"></p>
+                    <p id="fileNameDisplay" class="text-xs text-gray-400 dark:text-gray-500 mt-1"></p>
                 </div>
             </div>
             
             <!-- БЛОК ПРЕДУПРЕЖДЕНИЯ О НЕДОСТАЮЩИХ АВТОРАХ (СНИЛС) -->
-            <div id="missingAuthorsContainer" class="hidden p-4 bg-red-100 border-l-4 border-red-500 rounded-lg shadow-md">
+            <div id="missingAuthorsContainer" class="hidden p-4 bg-red-100 border-l-4 border-red-500 rounded-lg shadow-md dark:bg-red-900/20 dark:border-red-600">
                 <div class="flex items-start">
-                    <svg class="h-6 w-6 text-red-600 mt-1 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <svg class="h-6 w-6 text-red-600 dark:text-red-400 mt-1 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.3 16c-.77 1.333.192 3 1.732 3z" />
                     </svg>
                     <div class="ml-3 w-full">
-                        <h3 class="text-lg font-semibold text-red-800">
+                        <h3 class="text-lg font-semibold text-red-800 dark:text-red-200">
                             Обнаружены недостающие СНИЛС!
                         </h3>
-                        <p class="mt-1 text-sm text-red-700">
+                        <p class="mt-1 text-sm text-red-700 dark:text-red-300">
                             Введите СНИЛС для следующих авторов, чтобы не пропускать их записи.
                         </p>
                         <!-- ДИНАМИЧЕСКАЯ ФОРМА ДЛЯ БЫСТРОГО ВВОДА СНИЛС -->
-                        <form id="missingSnilsForm" class="mt-2 text-sm bg-red-50 p-3 rounded max-h-56 overflow-y-auto space-y-2">
+                        <form id="missingSnilsForm" class="mt-2 text-sm bg-red-50 dark:bg-red-900/10 p-3 rounded max-h-56 overflow-y-auto space-y-2 custom-scrollbar">
                             <!-- Список авторов и полей ввода будет сгенерирован здесь -->
                         </form>
-                        <button id="saveMissingSnilsButton" class="w-full mt-3 bg-red-600 text-white font-bold py-2 rounded-lg hover:bg-red-700 transition-colors duration-200">
+                        <button id="saveMissingSnilsButton" class="w-full mt-3 bg-red-600 text-white font-bold py-2 rounded-lg hover:bg-red-700 transition-colors duration-200 dark:bg-red-700 dark:hover:bg-red-600">
                             Сохранить все недостающие СНИЛС
                         </button>
                     </div>
@@ -200,21 +432,21 @@
             </div>
 
             <!-- БЛОК: ПРЕДУПРЕЖДЕНИЕ О НЕДОСТАЮЩИХ МПИ (Ключ - ГРСИ) -->
-            <div id="missingMpiContainer" class="hidden p-4 bg-orange-100 border-l-4 border-orange-500 rounded-lg shadow-md">
+            <div id="missingMpiContainer" class="hidden p-4 bg-orange-100 border-l-4 border-orange-500 rounded-lg shadow-md dark:bg-orange-900/20 dark:border-orange-600">
                 <div class="flex items-start">
-                    <svg class="h-6 w-6 text-orange-600 mt-1 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h.01M17 11h.01M9 15h.01M15 15h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" /></svg>
+                    <svg class="h-6 w-6 text-orange-600 dark:text-orange-400 mt-1 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h.01M17 11h.01M9 15h.01M15 15h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" /></svg>
                     <div class="ml-3 w-full">
-                        <h3 class="text-lg font-semibold text-orange-800">
+                        <h3 class="text-lg font-semibold text-orange-800 dark:text-orange-200">
                             Обнаружены недостающие МПИ!
                         </h3>
-                        <p class="mt-1 text-sm text-orange-700">
+                        <p class="mt-1 text-sm text-orange-700 dark:text-orange-300">
                             Введите Межповерочный Интервал (в месяцах) или "-" для бессрочной поверки для следующих Номеров записи ГРСИ.
                         </p>
                         <!-- ДИНАМИЧЕСКАЯ ФОРМА ДЛЯ БЫСТРОГО ВВОДА МПИ -->
-                        <form id="missingMpiForm" class="mt-2 text-sm bg-orange-50 p-3 rounded max-h-56 overflow-y-auto space-y-2">
+                        <form id="missingMpiForm" class="mt-2 text-sm bg-orange-50 dark:bg-orange-900/10 p-3 rounded max-h-56 overflow-y-auto space-y-2 custom-scrollbar">
                             <!-- Список типов СИ и полей ввода будет сгенерирован здесь -->
                         </form>
-                        <button id="saveMissingMpiButton" class="w-full mt-3 bg-orange-600 text-white font-bold py-2 rounded-lg hover:bg-orange-700 transition-colors duration-200">
+                        <button id="saveMissingMpiButton" class="w-full mt-3 bg-orange-600 text-white font-bold py-2 rounded-lg hover:bg-orange-700 transition-colors duration-200 dark:bg-orange-700 dark:hover:bg-orange-600">
                             Сохранить все недостающие МПИ
                         </button>
                     </div>
@@ -222,10 +454,10 @@
             </div>
             
             <!-- НОВЫЙ БЛОК: ОПЦИЯ РАЗДЕЛЕНИЯ ФАЙЛОВ -->
-            <div id="splitOutputContainer" class="p-3 bg-gray-100 rounded-lg border border-gray-200">
+            <div id="splitOutputContainer" class="p-3 bg-gray-100 dark:bg-slate-800 rounded-lg border border-gray-200 dark:border-slate-700">
                 <label for="splitOutputCheckbox" class="flex items-center space-x-2 cursor-pointer">
-                    <input type="checkbox" id="splitOutputCheckbox" class="h-5 w-5 text-accent-sky border-gray-300 rounded focus:ring-accent-sky">
-                    <span class="text-gray-700 font-medium select-none">
+                    <input type="checkbox" id="splitOutputCheckbox" class="h-5 w-5 text-accent-sky border-gray-300 rounded focus:ring-accent-sky dark:border-slate-600 dark:bg-slate-700">
+                    <span class="text-gray-700 dark:text-gray-300 font-medium select-none">
                         Разделить выходные файлы (максимально 1000 записей на файл).
                     </span>
                 </label>
@@ -233,18 +465,18 @@
 
 
             <!-- БЛОК 2: Статус и Скачивание -->
-            <div class="p-4 bg-gray-50 rounded-lg shadow-inner border border-gray-200">
-                <h2 class="text-xl font-semibold text-gray-700 mb-3 border-b pb-1">
+            <div class="p-4 bg-gray-50 dark:bg-slate-800/50 rounded-lg shadow-inner border border-gray-200 dark:border-slate-700">
+                <h2 class="text-xl font-semibold text-gray-700 dark:text-gray-300 mb-3 border-b pb-1 dark:border-gray-700">
                     Статус и результат
                 </h2>
                 
-                <div id="statusMessage" class="text-gray-600 text-lg font-semibold mb-4">
+                <div id="statusMessage" class="text-gray-600 dark:text-gray-400 text-lg font-semibold mb-4">
                     Ожидание загрузки файла...
                 </div>
                 
                 <!-- Processing Animation -->
                 <div id="processingIndicator" class="mt-4 hidden">
-                    <div class="h-2.5 bg-sky-200 rounded-full overflow-hidden">
+                    <div class="h-2.5 bg-sky-200 dark:bg-sky-800 rounded-full overflow-hidden">
                         <div class="h-full bg-accent-sky rounded-full animate-progress-stripes"></div>
                     </div>
                     <p class="text-xs text-accent-sky mt-1 font-medium animate-pulse">Обработка данных...</p>
@@ -252,49 +484,49 @@
 
                 <!-- Кнопка с accent-emerald -->
                 <button id="downloadButton"
-                        class="w-full mt-4 bg-emerald-500 text-white font-bold py-3 px-4 rounded-lg shadow-md hover:bg-emerald-600 transition-colors duration-200 opacity-50 cursor-not-allowed disabled:shadow-none"
+                        class="w-full mt-4 bg-emerald-500 text-white font-bold py-3 px-4 rounded-lg shadow-md hover:bg-emerald-600 transition-colors duration-200 opacity-50 cursor-not-allowed disabled:shadow-none dark:bg-emerald-600 dark:hover:bg-emerald-500"
                         disabled>
                     Скачать XML-файл
                 </button>
-                <p id="recordCount" class="text-sm text-gray-500 mt-2 text-center hidden"></p>
+                <p id="recordCount" class="text-sm text-gray-500 dark:text-gray-400 mt-2 text-center hidden"></p>
             </div>
         </div>
         
         <!-- БЛОК 3: Управление сопоставлением Авторов и СНИЛС -->
-        <details class="mt-8 p-4 bg-yellow-50 border border-yellow-300 rounded-lg" open>
-            <summary class="flex justify-between items-center cursor-pointer font-semibold text-yellow-800 focus:outline-none">
+        <details class="mt-8 p-4 bg-yellow-50 border border-yellow-300 rounded-lg dark:bg-yellow-900/20 dark:border-yellow-700" open>
+            <summary class="flex justify-between items-center cursor-pointer font-semibold text-yellow-800 dark:text-yellow-200 focus:outline-none">
                 <span>
-                    <svg class="w-5 h-5 inline-block mr-2 text-yellow-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" /></svg>
+                    <svg class="w-5 h-5 inline-block mr-2 text-yellow-600 dark:text-yellow-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" /></svg>
                     Управление сотрудниками и СНИЛС.
                 </span>
-                <svg class="w-4 h-4 text-yellow-600 transition-transform duration-200" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
+                <svg class="w-4 h-4 text-yellow-600 dark:text-yellow-400 transition-transform duration-200" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
             </summary>
             
             <div class="mt-4 space-y-4">
                 <form id="snilsMappingForm" class="flex flex-col sm:flex-row gap-2">
                     <input type="text" id="authorNameInput" placeholder="ФИО автора (как в CSV)" required
-                           class="flex-1 p-2 border border-gray-300 rounded-lg focus:ring-1 focus:ring-yellow-500 focus:border-yellow-500 text-sm" autocomplete="off">
+                           class="flex-1 p-2 border border-gray-300 rounded-lg focus:ring-1 focus:ring-yellow-500 focus:border-yellow-500 text-sm dark:bg-slate-700 dark:border-slate-600 dark:text-white" autocomplete="off">
                     <input type="text" id="snilsInput" placeholder="СНИЛС (11 цифр)" pattern="^\d{11}$" required
-                           class="flex-1 p-2 border border-gray-300 rounded-lg focus:ring-1 focus:ring-yellow-500 focus:border-yellow-500 text-sm" autocomplete="off">
-                    <button type="submit" class="bg-yellow-600 text-white p-2 rounded-lg font-medium hover:bg-yellow-700 transition duration-150 flex-shrink-0">
+                           class="flex-1 p-2 border border-gray-300 rounded-lg focus:ring-1 focus:ring-yellow-500 focus:border-yellow-500 text-sm dark:bg-slate-700 dark:border-slate-600 dark:text-white" autocomplete="off">
+                    <button type="submit" class="bg-yellow-600 text-white p-2 rounded-lg font-medium hover:bg-yellow-700 transition duration-150 flex-shrink-0 dark:bg-yellow-700 dark:hover:bg-yellow-600">
                         Добавить/Обновить
                     </button>
                 </form>
 
                 <!-- Добавлены кнопки Импорта/Экспорта СНИЛС -->
                 <div class="flex gap-2">
-                    <button id="exportSnilsButton" type="button" class="w-1/2 bg-gray-300 text-gray-800 p-2 rounded-lg font-medium hover:bg-gray-400 transition duration-150">
+                    <button id="exportSnilsButton" type="button" class="w-1/2 bg-gray-300 text-gray-800 p-2 rounded-lg font-medium hover:bg-gray-400 transition duration-150 dark:bg-slate-600 dark:text-slate-200 dark:hover:bg-slate-500">
                         Экспорт JSON
                     </button>
                     <input type="file" id="importSnilsFile" accept=".json" class="hidden">
-                    <button id="importSnilsButton" type="button" class="w-1/2 bg-gray-300 text-gray-800 p-2 rounded-lg font-medium hover:bg-gray-400 transition duration-150">
+                    <button id="importSnilsButton" type="button" class="w-1/2 bg-gray-300 text-gray-800 p-2 rounded-lg font-medium hover:bg-gray-400 transition duration-150 dark:bg-slate-600 dark:text-slate-200 dark:hover:bg-slate-500">
                         Импорт JSON
                     </button>
                 </div>
                 
-                <div id="mappingListContainer" class="max-h-60 overflow-y-auto border border-gray-300 rounded-lg shadow-inner">
+                <div id="mappingListContainer" class="max-h-60 overflow-y-auto border border-gray-300 rounded-lg shadow-inner dark:border-slate-600 custom-scrollbar">
                     <!-- Mappings will be rendered here -->
-                    <p class="p-4 text-gray-500 text-sm italic" id="emptyMappingMessage">
+                    <p class="p-4 text-gray-500 dark:text-gray-400 text-sm italic" id="emptyMappingMessage">
                         Нет сохраненных сопоставлений. Используйте форму выше или импортируйте JSON.
                     </p>
                 </div>
@@ -302,46 +534,46 @@
         </details>
         
         <!-- БЛОК 4: Управление сопоставлением ГРСИ и МПИ (Ключ - ГРСИ) -->
-        <details class="mt-4 p-4 bg-green-50 border border-green-300 rounded-lg" open>
-            <summary class="flex justify-between items-center cursor-pointer font-semibold text-green-800 focus:outline-none">
+        <details class="mt-4 p-4 bg-green-50 border border-green-300 rounded-lg dark:bg-green-900/20 dark:border-green-700" open>
+            <summary class="flex justify-between items-center cursor-pointer font-semibold text-green-800 dark:text-green-200 focus:outline-none">
                 <span>
-                    <svg class="w-5 h-5 inline-block mr-2 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                    <svg class="w-5 h-5 inline-block mr-2 text-green-600 dark:text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
                     Управление ГРСИ и МПИ.
                 </span>
-                <svg class="w-4 h-4 text-green-600 transition-transform duration-200" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
+                <svg class="w-4 h-4 text-green-600 dark:text-green-400 transition-transform duration-200" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
             </summary>
             
             <div class="mt-4 space-y-4">
                 <form id="mpiMappingForm" class="flex flex-col sm:flex-row gap-2">
                     <input type="text" id="instrumentTypeInput" placeholder="Номер записи ГРСИ (как в CSV, колонка 4)" required
-                           class="flex-1 p-2 border border-gray-300 rounded-lg focus:ring-1 focus:ring-green-500 focus:border-green-500 text-sm" autocomplete="off">
+                           class="flex-1 p-2 border border-gray-300 rounded-lg focus:ring-1 focus:ring-green-500 focus:border-green-500 text-sm dark:bg-slate-700 dark:border-slate-600 dark:text-white" autocomplete="off">
                     <input type="text" id="mpiMonthsConfigInput" placeholder="МПИ (мес., напр. 12, 24 или -)" pattern="^[0-9]+$|^-$" required
-                           class="flex-1 p-2 border border-gray-300 rounded-lg focus:ring-1 focus:ring-green-500 focus:border-green-500 text-sm" autocomplete="off">
-                    <button type="submit" class="bg-green-600 text-white p-2 rounded-lg font-medium hover:bg-green-700 transition duration-150 flex-shrink-0">
+                           class="flex-1 p-2 border border-gray-300 rounded-lg focus:ring-1 focus:ring-green-500 focus:border-green-500 text-sm dark:bg-slate-700 dark:border-slate-600 dark:text-white" autocomplete="off">
+                    <button type="submit" class="bg-green-600 text-white p-2 rounded-lg font-medium hover:bg-green-700 transition duration-150 flex-shrink-0 dark:bg-green-700 dark:hover:bg-green-600">
                         Добавить/Обновить
                     </button>
                 </form>
                 
                 <!-- Добавлены кнопки Импорта/Экспорта МПИ -->
                 <div class="flex gap-2">
-                    <button id="exportMpiButton" type="button" class="w-1/2 bg-gray-300 text-gray-800 p-2 rounded-lg font-medium hover:bg-gray-400 transition duration-150">
+                    <button id="exportMpiButton" type="button" class="w-1/2 bg-gray-300 text-gray-800 p-2 rounded-lg font-medium hover:bg-gray-400 transition duration-150 dark:bg-slate-600 dark:text-slate-200 dark:hover:bg-slate-500">
                         Экспорт JSON
                     </button>
                     <input type="file" id="importMpiFile" accept=".json" class="hidden">
-                    <button id="importMpiButton" type="button" class="w-1/2 bg-gray-300 text-gray-800 p-2 rounded-lg font-medium hover:bg-gray-400 transition duration-150">
+                    <button id="importMpiButton" type="button" class="w-1/2 bg-gray-300 text-gray-800 p-2 rounded-lg font-medium hover:bg-gray-400 transition duration-150 dark:bg-slate-600 dark:text-slate-200 dark:hover:bg-slate-500">
                         Импорт JSON
                     </button>
                 </div>
 
-                <div id="mpiMappingListContainer" class="max-h-60 overflow-y-auto border border-gray-300 rounded-lg shadow-inner">
+                <div id="mpiMappingListContainer" class="max-h-60 overflow-y-auto border border-gray-300 rounded-lg shadow-inner dark:border-slate-600 custom-scrollbar">
                     <!-- Mappings will be rendered here -->
-                    <p class="p-4 text-gray-500 text-sm italic" id="emptyMpiMessage">
+                    <p class="p-4 text-gray-500 dark:text-gray-400 text-sm italic" id="emptyMpiMessage">
                         Нет сохраненных интервалов МПИ. Используйте форму выше или импортируйте JSON.
                     </p>
                 </div>
                 <!-- Аккуратная навигационная ссылка -->
                 <div class="mb-4 -mt-2"> 
-                    <a href="/mpi.html" class="text-sm text-gray-500 hover:text-blue-600 transition duration-150 flex items-center font-medium">
+                    <a href="/mpi.html" class="text-sm text-gray-500 hover:text-blue-600 transition duration-150 flex items-center font-medium dark:text-gray-400 dark:hover:text-blue-400">
                     <!-- Иконка стрелки влево для навигации -->
                     <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
                     К конвертеру ГРСИ и МПИ
@@ -351,26 +583,26 @@
         </details>
 
         <!-- Debug Log Spoiler (Контейнер лога) -->
-        <details class="mt-8 p-4 bg-gray-100 border border-gray-300 rounded-lg" id="debugLogSpoiler">
-            <summary class="flex justify-between items-center cursor-pointer font-semibold text-gray-700 focus:outline-none">
+        <details class="mt-8 p-4 bg-gray-100 border border-gray-300 rounded-lg dark:bg-slate-800 dark:border-slate-700" id="debugLogSpoiler">
+            <summary class="flex justify-between items-center cursor-pointer font-semibold text-gray-700 dark:text-gray-300 focus:outline-none">
                 <span>
                     <!-- Новая иконка: Документ/Список -->
-                    <svg class="w-5 h-5 inline-block mr-2 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <svg class="w-5 h-5 inline-block mr-2 text-gray-500 dark:text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2m-9 0V3a1 1 0 011-1h4a1 1 0 011 1v2M9 5h6m-6 4h6m-6 4h6m-6 4h6" />
                     </svg>
                     Лог конвертации
                 </span>
-                <svg class="w-4 h-4 text-gray-500 transition-transform duration-200" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
+                <svg class="w-4 h-4 text-gray-500 dark:text-gray-400 transition-transform duration-200" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
             </summary>
             <!-- Контейнер лога: p-2 для минимального, но достаточного отступа -->
-            <div id="logDetails" class="mt-2 text-sm text-gray-700 overflow-auto h-40 bg-white p-2 rounded-lg border border-gray-200 shadow-inner">
+            <div id="logDetails" class="mt-2 text-sm text-gray-700 dark:text-gray-300 overflow-auto h-40 bg-white dark:bg-slate-900 p-2 rounded-lg border border-gray-200 dark:border-slate-600 shadow-inner custom-scrollbar">
                 <!-- Log entries will appear here as structured HTML -->
             </div>
         </details>
 
         <!-- Footer Section with Copyright -->
-        <footer class="mt-10 pt-6 border-t border-gray-200 text-center">
-            <p class="text-xs text-gray-400">
+        <footer class="mt-10 pt-6 border-t border-gray-200 dark:border-slate-700 text-center">
+            <p class="text-xs text-gray-400 dark:text-gray-500">
                 Разработано Службой испытаний, экспертизы и метрологии ГАУ ИНПЦ "Гормедтехника".
             </p>
         </footer>
@@ -458,11 +690,11 @@
             allProcessedRecords = []; // Очистка записей
             statusMessage.textContent = 'Начало обработки файла...';
             statusMessage.classList.remove('text-red-600');
-            statusMessage.classList.add('text-gray-600');
+            statusMessage.classList.add('text-gray-600', 'dark:text-gray-400');
             processingIndicator.classList.remove('hidden');
             downloadButton.disabled = true;
             downloadButton.classList.add('opacity-50', 'cursor-not-allowed', 'disabled:shadow-none');
-            downloadButton.classList.remove('bg-emerald-500', 'hover:bg-emerald-600');
+            downloadButton.classList.remove('bg-emerald-500', 'hover:bg-emerald-600', 'dark:bg-emerald-600', 'dark:hover:bg-emerald-500');
             recordCountElement.classList.add('hidden');
             missingAuthorsContainer.classList.add('hidden'); 
             missingMpiContainer.classList.add('hidden'); 
@@ -477,11 +709,11 @@
 
         function updateStatus(message, isError = false) {
             statusMessage.textContent = message;
-            statusMessage.className = `font-semibold text-lg mb-4 ${isError ? 'text-red-600' : 'text-gray-600'}`;
+            statusMessage.className = `font-semibold text-lg mb-4 ${isError ? 'text-red-600 dark:text-red-400' : 'text-gray-600 dark:text-gray-400'}`;
             if (isError) {
                 downloadButton.disabled = true;
                 downloadButton.classList.add('opacity-50', 'cursor-not-allowed', 'disabled:shadow-none');
-                downloadButton.classList.remove('bg-emerald-500', 'hover:bg-emerald-600');
+                downloadButton.classList.remove('bg-emerald-500', 'hover:bg-emerald-600', 'dark:bg-emerald-600', 'dark:hover:bg-emerald-500');
             }
         }
 
@@ -495,7 +727,7 @@
             updateStatus(message, false);
             downloadButton.disabled = false;
             downloadButton.classList.remove('opacity-50', 'cursor-not-allowed', 'disabled:shadow-none');
-            downloadButton.classList.add('bg-emerald-500', 'hover:bg-emerald-600');
+            downloadButton.classList.add('bg-emerald-500', 'hover:bg-emerald-600', 'dark:bg-emerald-600', 'dark:hover:bg-emerald-500');
             recordCountElement.textContent = `Сконвертировано валидных записей: ${count}. Ошибок обработки строк: ${errorCount}.`;
             recordCountElement.classList.remove('hidden');
         }
@@ -504,22 +736,22 @@
             const timestamp = new Date().toLocaleTimeString('ru-RU');
             
             let iconSvg = '';
-            let textColor = 'text-gray-700';
-            let levelColor = 'text-emerald-600'; 
+            let textColor = 'text-gray-700 dark:text-gray-300';
+            let levelColor = 'text-emerald-600 dark:text-emerald-400'; 
             let levelDisplay = 'ИНФО';
 
             if (level === 'ERROR') {
-                iconSvg = '<svg class="w-4 h-4 mr-1 flex-shrink-0 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.3 16c-.77 1.333.192 3 1.732 3z" /></svg>';
-                textColor = 'text-red-700';
-                levelColor = 'text-red-600';
+                iconSvg = '<svg class="w-4 h-4 mr-1 flex-shrink-0 text-red-600 dark:text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.3 16c-.77 1.333.192 3 1.732 3z" /></svg>';
+                textColor = 'text-red-700 dark:text-red-300';
+                levelColor = 'text-red-600 dark:text-red-400';
                 levelDisplay = 'ОШИБКА';
             } else if (level === 'WARN') {
-                iconSvg = '<svg class="w-4 h-4 mr-1 flex-shrink-0 text-orange-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.3 16c-.77 1.333.192 3 1.732 3z" /></svg>';
-                textColor = 'text-orange-700';
-                levelColor = 'text-orange-600';
+                iconSvg = '<svg class="w-4 h-4 mr-1 flex-shrink-0 text-orange-600 dark:text-orange-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.3 16c-.77 1.333.192 3 1.732 3z" /></svg>';
+                textColor = 'text-orange-700 dark:text-orange-300';
+                levelColor = 'text-orange-600 dark:text-orange-400';
                 levelDisplay = 'ПРЕДУПРЕЖДЕНИЕ';
             } else {
-                iconSvg = '<svg class="w-4 h-4 mr-1 flex-shrink-0 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg>';
+                iconSvg = '<svg class="w-4 h-4 mr-1 flex-shrink-0 text-emerald-600 dark:text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg>';
             }
 
             const logEntryHtml = `
@@ -754,16 +986,16 @@
             emptyMappingMessage.classList.add('hidden');
 
             const table = document.createElement('table');
-            table.className = 'min-w-full divide-y divide-gray-200';
+            table.className = 'min-w-full divide-y divide-gray-200 dark:divide-gray-700';
             table.innerHTML = `
-                <thead class="bg-gray-200 sticky top-0">
+                <thead class="bg-gray-200 dark:bg-gray-700 sticky top-0">
                     <tr>
-                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ФИО</th>
-                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">СНИЛС</th>
-                        <th class="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Действие</th>
+                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">ФИО</th>
+                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">СНИЛС</th>
+                        <th class="px-4 py-2 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Действие</th>
                     </tr>
                 </thead>
-                <tbody class="bg-white divide-y divide-gray-100" id="mappingTableBody">
+                <tbody class="bg-white dark:bg-slate-800 divide-y divide-gray-100 dark:divide-gray-700" id="mappingTableBody">
                 </tbody>
             `;
             mappingListContainer.appendChild(table);
@@ -772,12 +1004,12 @@
             authors.forEach(author => {
                 const snils = authorSnilsMap[author];
                 const tr = document.createElement('tr');
-                tr.className = 'hover:bg-gray-50 transition duration-100';
+                tr.className = 'hover:bg-gray-50 dark:hover:bg-slate-700 transition duration-100';
                 tr.innerHTML = `
-                    <td class="px-4 py-2 whitespace-nowrap text-sm font-medium text-gray-900">${author}</td>
-                    <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-500">${snils}</td>
+                    <td class="px-4 py-2 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-gray-100">${author}</td>
+                    <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">${snils}</td>
                     <td class="px-4 py-2 whitespace-nowrap text-right text-sm font-medium">
-                        <button data-author="${author}" class="delete-snils-btn text-red-600 hover:text-red-900 transition duration-150">
+                        <button data-author="${author}" class="delete-snils-btn text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300 transition duration-150">
                             Удалить
                         </button>
                     </td>
@@ -803,16 +1035,16 @@
             emptyMpiMessage.classList.add('hidden');
 
             const table = document.createElement('table');
-            table.className = 'min-w-full divide-y divide-gray-200';
+            table.className = 'min-w-full divide-y divide-gray-200 dark:divide-gray-700';
             table.innerHTML = `
-                <thead class="bg-gray-200 sticky top-0">
+                <thead class="bg-gray-200 dark:bg-gray-700 sticky top-0">
                     <tr>
-                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Номер ГРСИ</th>
-                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">МПИ (мес. или -)</th>
-                        <th class="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Действие</th>
+                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Номер ГРСИ</th>
+                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">МПИ (мес. или -)</th>
+                        <th class="px-4 py-2 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Действие</th>
                     </tr>
                 </thead>
-                <tbody class="bg-white divide-y divide-gray-100" id="mpiMappingTableBody">
+                <tbody class="bg-white dark:bg-slate-800 divide-y divide-gray-100 dark:divide-gray-700" id="mpiMappingTableBody">
                 </tbody>
             `;
             mpiMappingListContainer.appendChild(table);
@@ -821,12 +1053,12 @@
             grsiNumbers.forEach(grsi => {
                 const mpi = mpiMonthsMap[grsi];
                 const tr = document.createElement('tr');
-                tr.className = 'hover:bg-gray-50 transition duration-100';
+                tr.className = 'hover:bg-gray-50 dark:hover:bg-slate-700 transition duration-100';
                 tr.innerHTML = `
-                    <td class="px-4 py-2 whitespace-nowrap text-sm font-medium text-gray-900">${grsi}</td>
-                    <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-500">${mpi}</td>
+                    <td class="px-4 py-2 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-gray-100">${grsi}</td>
+                    <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">${mpi}</td>
                     <td class="px-4 py-2 whitespace-nowrap text-right text-sm font-medium">
-                        <button data-type="${grsi}" class="delete-mpi-btn text-red-600 hover:text-red-900 transition duration-150">
+                        <button data-type="${grsi}" class="delete-mpi-btn text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300 transition duration-150">
                             Удалить
                         </button>
                     </td>
@@ -1031,11 +1263,11 @@
                 missingSnilsForm.innerHTML = ''; 
                 missingAuthors.forEach(author => {
                     const div = document.createElement('div');
-                    div.className = 'flex flex-col sm:flex-row items-center gap-2 bg-white p-2 rounded shadow-sm border border-red-200';
+                    div.className = 'flex flex-col sm:flex-row items-center gap-2 bg-white dark:bg-slate-800 p-2 rounded shadow-sm border border-red-200 dark:border-red-800';
                     div.innerHTML = `
-                        <span class="font-medium text-gray-800 text-sm w-full sm:w-2/5 truncate" title="${author}">${author}</span>
+                        <span class="font-medium text-gray-800 dark:text-gray-200 text-sm w-full sm:w-2/5 truncate" title="${author}">${author}</span>
                         <input type="text" data-author="${author}" placeholder="СНИЛС (11 цифр)" pattern="^\\d{11}$"
-                               class="snils-input flex-1 p-1 border border-gray-300 rounded text-sm w-full" autocomplete="off">
+                               class="snils-input flex-1 p-1 border border-gray-300 dark:border-slate-600 dark:bg-slate-700 dark:text-white rounded text-sm w-full" autocomplete="off">
                     `;
                     missingSnilsForm.appendChild(div);
                 });
@@ -1065,11 +1297,11 @@
                 missingMpiForm.innerHTML = ''; 
                 missingGrsi.forEach(grsi => {
                     const div = document.createElement('div');
-                    div.className = 'flex flex-col sm:flex-row items-center gap-2 bg-white p-2 rounded shadow-sm border border-orange-200';
+                    div.className = 'flex flex-col sm:flex-row items-center gap-2 bg-white dark:bg-slate-800 p-2 rounded shadow-sm border border-orange-200 dark:border-orange-800';
                     div.innerHTML = `
-                        <span class="font-medium text-gray-800 text-sm w-full sm:w-2/5 truncate" title="${grsi}">ГРСИ №: ${grsi}</span>
+                        <span class="font-medium text-gray-800 dark:text-gray-200 text-sm w-full sm:w-2/5 truncate" title="${grsi}">ГРСИ №: ${grsi}</span>
                         <input type="text" data-type="${grsi}" placeholder="МПИ (месяцы) или -" pattern="^[0-9]+$|^-$"
-                               class="mpi-input flex-1 p-1 border border-gray-300 rounded text-sm w-full" autocomplete="off">
+                               class="mpi-input flex-1 p-1 border border-gray-300 dark:border-slate-600 dark:bg-slate-700 dark:text-white rounded text-sm w-full" autocomplete="off">
                     `;
                     missingMpiForm.appendChild(div);
                 });
@@ -1092,7 +1324,7 @@
                 const author = input.dataset.author;
                 const snils = input.value.trim();
 
-                input.classList.remove('border-red-500', 'bg-red-50', 'border-emerald-500', 'bg-emerald-50');
+                input.classList.remove('border-red-500', 'bg-red-50', 'border-emerald-500', 'bg-emerald-50', 'dark:border-red-500', 'dark:bg-red-900/20', 'dark:border-emerald-500', 'dark:bg-emerald-900/20');
                 
                 if (snils.length > 0) {
                     if (snils.match(/^\d{11}$/)) {
@@ -1100,11 +1332,11 @@
                             authorSnilsMap[author] = snils;
                             newMappingsCount++;
                         }
-                        input.classList.add('border-emerald-500', 'bg-emerald-50');
+                        input.classList.add('border-emerald-500', 'bg-emerald-50', 'dark:border-emerald-500', 'dark:bg-emerald-900/20');
                         input.disabled = true; 
                     } else {
                         logError(`Некорректный СНИЛС для "${author}". Ожидается 11 цифр.`);
-                        input.classList.add('border-red-500', 'bg-red-50');
+                        input.classList.add('border-red-500', 'bg-red-50', 'dark:border-red-500', 'dark:bg-red-900/20');
                         errorFound = true;
                     }
                 }
@@ -1145,7 +1377,7 @@
                 const isNoExpiry = rawValue === MPI_NO_EXPIRY_MARK;
                 const mpi = parseInt(rawValue, 10);
 
-                input.classList.remove('border-red-500', 'bg-red-50', 'border-emerald-500', 'bg-emerald-50');
+                input.classList.remove('border-red-500', 'bg-red-50', 'border-emerald-500', 'bg-emerald-50', 'dark:border-red-500', 'dark:bg-red-900/20', 'dark:border-emerald-500', 'dark:bg-emerald-900/20');
                 
                 if (isNoExpiry || (!isNaN(mpi) && mpi > 0)) {
                     const valueToStore = isNoExpiry ? MPI_NO_EXPIRY_MARK : mpi;
@@ -1153,11 +1385,11 @@
                         mpiMonthsMap[grsiNumber] = valueToStore;
                         newMappingsCount++;
                     }
-                    input.classList.add('border-emerald-500', 'bg-emerald-50');
+                    input.classList.add('border-emerald-500', 'bg-emerald-50', 'dark:border-emerald-500', 'dark:bg-emerald-900/20');
                     input.disabled = true; 
                 } else if (rawValue !== '') {
                     logError(`Некорректный МПИ для ГРСИ №${grsiNumber}. Ожидается целое число месяцев > 0 или "${MPI_NO_EXPIRY_MARK}".`);
-                    input.classList.add('border-red-500', 'bg-red-50');
+                    input.classList.add('border-red-500', 'bg-red-50', 'dark:border-red-500', 'dark:bg-red-900/20');
                     errorFound = true;
                 }
             });
