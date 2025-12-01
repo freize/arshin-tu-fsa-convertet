@@ -273,28 +273,28 @@
                 box-shadow: inset 0 2px 4px 0 rgba(0, 0, 0, 0.2);
             }
             
-            .bg-red-100 {
-                background-color: rgba(248, 113, 113, 0.1);
-            }
-            
-            .bg-orange-100 {
-                background-color: rgba(251, 146, 60, 0.1);
-            }
-            
             .bg-red-50 {
-                background-color: rgba(248, 113, 113, 0.05);
+                background-color: rgba(254, 226, 226, 0.1);
             }
             
             .bg-orange-50 {
-                background-color: rgba(251, 146, 60, 0.05);
+                background-color: rgba(255, 237, 213, 0.1);
             }
             
-            .border-red-200 {
-                border-color: rgba(248, 113, 113, 0.3);
+            .bg-purple-50 {
+                background-color: rgba(237, 233, 254, 0.1);
             }
             
-            .border-orange-200 {
-                border-color: rgba(251, 146, 60, 0.3);
+            .border-red-300 {
+                border-color: rgba(252, 165, 165, 0.3);
+            }
+            
+            .border-orange-300 {
+                border-color: rgba(253, 186, 116, 0.3);
+            }
+            
+            .border-purple-300 {
+                border-color: rgba(196, 181, 253, 0.3);
             }
             
             .bg-gray-200 {
@@ -408,9 +408,9 @@
             </div>
             
             <!-- БЛОК ПРЕДУПРЕЖДЕНИЯ О НЕДОСТАЮЩИХ АВТОРАХ (СНИЛС) -->
-            <div id="missingAuthorsContainer" class="hidden p-4 bg-red-100 border-l-4 border-red-500 rounded-lg shadow-md dark:bg-red-900/20 dark:border-red-600">
+            <div id="missingAuthorsContainer" class="hidden p-4 bg-red-50 border-l-4 border-red-300 rounded-lg shadow-md dark:bg-red-900/10 dark:border-red-500">
                 <div class="flex items-start">
-                    <svg class="h-6 w-6 text-red-600 dark:text-red-400 mt-1 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <svg class="h-6 w-6 text-red-500 dark:text-red-400 mt-1 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.3 16c-.77 1.333.192 3 1.732 3z" />
                     </svg>
                     <div class="ml-3 w-full">
@@ -421,10 +421,10 @@
                             Введите СНИЛС для следующих авторов, чтобы не пропускать их записи.
                         </p>
                         <!-- ДИНАМИЧЕСКАЯ ФОРМА ДЛЯ БЫСТРОГО ВВОДА СНИЛС -->
-                        <form id="missingSnilsForm" class="mt-2 text-sm bg-red-50 dark:bg-red-900/10 p-3 rounded max-h-56 overflow-y-auto space-y-2 custom-scrollbar">
+                        <form id="missingSnilsForm" class="mt-2 text-sm bg-white dark:bg-red-900/10 p-3 rounded max-h-56 overflow-y-auto space-y-2 custom-scrollbar">
                             <!-- Список авторов и полей ввода будет сгенерирован здесь -->
                         </form>
-                        <button id="saveMissingSnilsButton" class="w-full mt-3 bg-red-600 text-white font-bold py-2 rounded-lg hover:bg-red-700 transition-colors duration-200 dark:bg-red-700 dark:hover:bg-red-600">
+                        <button id="saveMissingSnilsButton" class="w-full mt-3 bg-red-500 text-white font-bold py-2 rounded-lg hover:bg-red-600 transition-colors duration-200 dark:bg-red-600 dark:hover:bg-red-500">
                             Сохранить все недостающие СНИЛС
                         </button>
                     </div>
@@ -432,21 +432,22 @@
             </div>
 
             <!-- БЛОК: ПРЕДУПРЕЖДЕНИЕ О НЕДОСТАЮЩИХ МПИ (Ключ - ГРСИ) -->
-            <div id="missingMpiContainer" class="hidden p-4 bg-orange-100 border-l-4 border-orange-500 rounded-lg shadow-md dark:bg-orange-900/20 dark:border-orange-600">
+            <div id="missingMpiContainer" class="hidden p-4 bg-orange-50 border-l-4 border-orange-300 rounded-lg shadow-md dark:bg-orange-900/10 dark:border-orange-500">
                 <div class="flex items-start">
-                    <svg class="h-6 w-6 text-orange-600 dark:text-orange-400 mt-1 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h.01M17 11h.01M9 15h.01M15 15h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" /></svg>
+                    <svg class="h-6 w-6 text-orange-500 dark:text-orange-400 mt-1 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h.01M17 11h.01M9 15h.01M15 15h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" /></svg>
                     <div class="ml-3 w-full">
                         <h3 class="text-lg font-semibold text-orange-800 dark:text-orange-200">
                             Обнаружены недостающие МПИ!
                         </h3>
                         <p class="mt-1 text-sm text-orange-700 dark:text-orange-300">
                             Введите Межповерочный Интервал (в месяцах) или "-" для бессрочной поверки для следующих Номеров записи ГРСИ.
+                            <span class="font-medium text-orange-800 dark:text-orange-300">Можно отметить "Вручную" для отложенного ввода по номеру документа.</span>
                         </p>
                         <!-- ДИНАМИЧЕСКАЯ ФОРМА ДЛЯ БЫСТРОГО ВВОДА МПИ -->
-                        <form id="missingMpiForm" class="mt-2 text-sm bg-orange-50 dark:bg-orange-900/10 p-3 rounded max-h-56 overflow-y-auto space-y-2 custom-scrollbar">
+                        <form id="missingMpiForm" class="mt-2 text-sm bg-white dark:bg-orange-900/10 p-3 rounded max-h-56 overflow-y-auto space-y-2 custom-scrollbar">
                             <!-- Список типов СИ и полей ввода будет сгенерирован здесь -->
                         </form>
-                        <button id="saveMissingMpiButton" class="w-full mt-3 bg-orange-600 text-white font-bold py-2 rounded-lg hover:bg-orange-700 transition-colors duration-200 dark:bg-orange-700 dark:hover:bg-orange-600">
+                        <button id="saveMissingMpiButton" class="w-full mt-3 bg-orange-500 text-white font-bold py-2 rounded-lg hover:bg-orange-600 transition-colors duration-200 dark:bg-orange-600 dark:hover:bg-orange-500">
                             Сохранить все недостающие МПИ
                         </button>
                     </div>
@@ -454,9 +455,9 @@
             </div>
 
             <!-- НОВЫЙ БЛОК: ПРЕДУПРЕЖДЕНИЕ О РУЧНЫХ МПИ (по Document) -->
-            <div id="manualMpiContainer" class="hidden p-4 bg-purple-100 border-l-4 border-purple-500 rounded-lg shadow-md dark:bg-purple-900/20 dark:border-purple-600">
+            <div id="manualMpiContainer" class="hidden p-4 bg-purple-50 border-l-4 border-purple-300 rounded-lg shadow-md dark:bg-purple-900/10 dark:border-purple-500">
                 <div class="flex items-start">
-                    <svg class="h-6 w-6 text-purple-600 dark:text-purple-400 mt-1 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <svg class="h-6 w-6 text-purple-500 dark:text-purple-400 mt-1 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                     </svg>
                     <div class="ml-3 w-full">
@@ -467,10 +468,10 @@
                             Для следующих записей с отметкой "Вручную" требуется ввести МПИ по номеру документа (не сохраняется в базу).
                         </p>
                         <!-- ДИНАМИЧЕСКАЯ ФОРМА ДЛЯ РУЧНОГО ВВОДА МПИ ПО DOCUMENT -->
-                        <form id="manualMpiForm" class="mt-2 text-sm bg-purple-50 dark:bg-purple-900/10 p-3 rounded max-h-56 overflow-y-auto space-y-3 custom-scrollbar">
+                        <form id="manualMpiForm" class="mt-2 text-sm bg-white dark:bg-purple-900/10 p-3 rounded max-h-56 overflow-y-auto space-y-3 custom-scrollbar">
                             <!-- Список документов и полей ввода будет сгенерирован здесь -->
                         </form>
-                        <button id="saveManualMpiButton" class="w-full mt-3 bg-purple-600 text-white font-bold py-2 rounded-lg hover:bg-purple-700 transition-colors duration-200 dark:bg-purple-700 dark:hover:bg-purple-600">
+                        <button id="saveManualMpiButton" class="w-full mt-3 bg-purple-500 text-white font-bold py-2 rounded-lg hover:bg-purple-600 transition-colors duration-200 dark:bg-purple-600 dark:hover:bg-purple-500">
                             Сохранить все ручные МПИ
                         </button>
                     </div>
@@ -508,7 +509,7 @@
 
                 <!-- Кнопка с accent-emerald -->
                 <button id="downloadButton"
-                        class="w-full mt-4 bg-emerald-500 text-white font-bold py-3 px-4 rounded-lg shadow-md hover:bg-emerald-600 transition-colors duration-200 opacity-50 cursor-not-allowed disabled:shadow-none dark:bg-emerald-600 dark:hover:bg-emerald-500"
+                        class="w-full mt-4 bg-gray-400 text-white font-bold py-3 px-4 rounded-lg shadow-md hover:bg-gray-500 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none disabled:hover:bg-gray-400 dark:bg-gray-600 dark:hover:bg-gray-500 dark:disabled:bg-gray-700"
                         disabled>
                     Скачать XML-файл
                 </button>
@@ -599,13 +600,20 @@
                         Нет сохраненных интервалов МПИ. Используйте форму выше или импортируйте JSON.
                     </p>
                 </div>
-                <!-- Аккуратная навигационная ссылка -->
-                <div class="mb-4 -mt-2"> 
+
+                <!-- Ссылка и кнопка на одном уровне -->
+                <div class="flex items-center justify-between mt-2 mb-4">
+                    <!-- Ссылка слева -->
                     <a href="/mpi.html" class="text-sm text-gray-500 hover:text-blue-600 transition duration-150 flex items-center font-medium dark:text-gray-400 dark:hover:text-blue-400">
-                    <!-- Иконка стрелки влево для навигации -->
-                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
-                    К конвертеру ГРСИ и МПИ
-                </a>
+                        <!-- Иконка стрелки влево для навигации -->
+                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+                        К конвертеру ГРСИ и МПИ
+                    </a>
+                    
+                    <!-- Кнопка удаления всех сопоставлений МПИ справа -->
+                    <button id="clearAllMpiButton" type="button" class="text-sm bg-red-500 text-white py-1 px-3 rounded hover:bg-red-600 transition duration-150 dark:bg-red-600 dark:hover:bg-red-500">
+                        Удалить всё
+                    </button>
                 </div>
             </div>
         </details>
@@ -716,6 +724,9 @@
         const manualMpiForm = document.getElementById('manualMpiForm');
         const saveManualMpiButton = document.getElementById('saveManualMpiButton');
 
+        // НОВЫЙ ЭЛЕМЕНТ - кнопка очистки всех данных МПИ
+        const clearAllMpiButton = document.getElementById('clearAllMpiButton');
+
         // --- УТИЛИТЫ И ОБЩИЕ ФУНКЦИИ ---
 
         function startProcessing(isNewFile = false) {
@@ -733,8 +744,8 @@
             statusMessage.classList.add('text-gray-600', 'dark:text-gray-400');
             processingIndicator.classList.remove('hidden');
             downloadButton.disabled = true;
-            downloadButton.classList.add('opacity-50', 'cursor-not-allowed', 'disabled:shadow-none');
             downloadButton.classList.remove('bg-emerald-500', 'hover:bg-emerald-600', 'dark:bg-emerald-600', 'dark:hover:bg-emerald-500');
+            downloadButton.classList.add('bg-gray-400', 'dark:bg-gray-600', 'disabled:opacity-50', 'disabled:cursor-not-allowed', 'disabled:hover:bg-gray-400', 'dark:disabled:bg-gray-700');
             recordCountElement.classList.add('hidden');
             missingAuthorsContainer.classList.add('hidden'); 
             missingMpiContainer.classList.add('hidden');
@@ -753,8 +764,8 @@
             statusMessage.className = `font-semibold text-lg mb-4 ${isError ? 'text-red-600 dark:text-red-400' : 'text-gray-600 dark:text-gray-400'}`;
             if (isError) {
                 downloadButton.disabled = true;
-                downloadButton.classList.add('opacity-50', 'cursor-not-allowed', 'disabled:shadow-none');
                 downloadButton.classList.remove('bg-emerald-500', 'hover:bg-emerald-600', 'dark:bg-emerald-600', 'dark:hover:bg-emerald-500');
+                downloadButton.classList.add('bg-gray-400', 'dark:bg-gray-600', 'disabled:opacity-50', 'disabled:cursor-not-allowed', 'disabled:hover:bg-gray-400', 'dark:disabled:bg-gray-700');
             }
         }
 
@@ -767,7 +778,7 @@
 
             updateStatus(message, false);
             downloadButton.disabled = false;
-            downloadButton.classList.remove('opacity-50', 'cursor-not-allowed', 'disabled:shadow-none');
+            downloadButton.classList.remove('bg-gray-400', 'dark:bg-gray-600', 'disabled:opacity-50', 'disabled:cursor-not-allowed', 'disabled:hover:bg-gray-400', 'dark:disabled:bg-gray-700');
             downloadButton.classList.add('bg-emerald-500', 'hover:bg-emerald-600', 'dark:bg-emerald-600', 'dark:hover:bg-emerald-500');
             recordCountElement.textContent = `Сконвертировано валидных записей: ${count}. Ошибок обработки строк: ${errorCount}.`;
             recordCountElement.classList.remove('hidden');
@@ -1199,6 +1210,20 @@
             }
         }
         
+        // НОВАЯ ФУНКЦИЯ: Очистка всех сопоставлений МПИ
+        function handleClearAllMpi() {
+            if (Object.keys(mpiMonthsMap).length === 0) {
+                logError('Нет данных для удаления: Сопоставления МПИ уже пусты.');
+                return;
+            }
+            
+            if (confirm("Вы уверены, что хотите удалить ВСЕ сопоставления ГРСИ и МПИ? Это действие нельзя отменить.")) {
+                mpiMonthsMap = {};
+                saveAndRenderMpiMappings();
+                logMessage('Все сопоставления ГРСИ и МПИ удалены.');
+            }
+        }
+        
         function exportSnilsMap() {
             if (Object.keys(authorSnilsMap).length === 0) {
                 logError('Нечего экспортировать: Сопоставления СНИЛС пусты.');
@@ -1438,11 +1463,35 @@
                                 </button>
                             ` : ''}
                         </div>
-                        <input type="text" data-type="${grsi}" placeholder="МПИ (месяцы) или -" pattern="^[0-9]+$|^-$"
-                               class="mpi-input flex-1 p-1 border border-gray-300 dark:border-slate-600 dark:bg-slate-700 dark:text-white rounded text-sm w-full" autocomplete="off">
+                        <div class="flex items-center gap-2 flex-1">
+                            <input type="text" data-type="${grsi}" placeholder="МПИ (месяцы) или -" pattern="^[0-9]+$|^-$"
+                                   class="mpi-input flex-1 p-1 border border-gray-300 dark:border-slate-600 dark:bg-slate-700 dark:text-white rounded text-sm w-full" autocomplete="off">
+                            <div class="flex items-center space-x-1">
+                                <input type="checkbox" data-type="${grsi}" class="manual-checkbox-mpi h-4 w-4 text-orange-600 border-gray-300 rounded focus:ring-orange-500 dark:border-slate-600 dark:bg-slate-700">
+                                <label class="text-xs text-gray-700 dark:text-gray-300 whitespace-nowrap">Вручную</label>
+                            </div>
+                        </div>
                     `;
                     missingMpiForm.appendChild(div);
+                    
+                    // Добавляем обработчик для чекбокса
+                    const checkbox = div.querySelector('.manual-checkbox-mpi');
+                    const input = div.querySelector('.mpi-input');
+                    
+                    checkbox.addEventListener('change', function() {
+                        if (this.checked) {
+                            input.disabled = true;
+                            input.value = '';
+                            input.removeAttribute('required');
+                            input.removeAttribute('pattern');
+                        } else {
+                            input.disabled = false;
+                            input.setAttribute('required', '');
+                            input.setAttribute('pattern', '^[0-9]+$|^-$');
+                        }
+                    });
                 });
+                
                 saveMissingMpiButton.onclick = handleMissingMpiSubmission;
                 return true; 
             } else {
@@ -1591,10 +1640,24 @@
                 const rawValue = input.value.trim();
                 const isNoExpiry = rawValue === MPI_NO_EXPIRY_MARK;
                 const mpi = parseInt(rawValue, 10);
+                
+                // Находим соответствующий чекбокс
+                const checkbox = missingMpiForm.querySelector(`.manual-checkbox-mpi[data-type="${grsiNumber}"]`);
+                const isManual = checkbox ? checkbox.checked : false;
 
                 input.classList.remove('border-red-500', 'bg-red-50', 'border-emerald-500', 'bg-emerald-50', 'dark:border-red-500', 'dark:bg-red-900/20', 'dark:border-emerald-500', 'dark:bg-emerald-900/20');
                 
-                if (isNoExpiry || (!isNaN(mpi) && mpi > 0)) {
+                if (isManual) {
+                    // Сохраняем как ручную запись
+                    mpiMonthsMap[grsiNumber] = {
+                        value: null,
+                        manual: true
+                    };
+                    newMappingsCount++;
+                    input.classList.add('border-purple-500', 'bg-purple-50', 'dark:border-purple-500', 'dark:bg-purple-900/20');
+                    input.disabled = true;
+                } else if (isNoExpiry || (!isNaN(mpi) && mpi > 0)) {
+                    // Сохраняем обычную запись с значением
                     const valueToStore = isNoExpiry ? MPI_NO_EXPIRY_MARK : mpi;
                     if (!mpiMonthsMap[grsiNumber] || mpiMonthsMap[grsiNumber].value !== valueToStore) {
                         mpiMonthsMap[grsiNumber] = {
@@ -2117,6 +2180,9 @@
                 mpiMonthsConfigInput.setAttribute('pattern', '^[0-9]+$|^-$');
             }
         });
+
+        // НОВЫЙ ОБРАБОТЧИК: Кнопка очистки всех сопоставлений МПИ
+        clearAllMpiButton.addEventListener('click', handleClearAllMpi);
 
 
         // Инициализация
